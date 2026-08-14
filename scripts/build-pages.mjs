@@ -6,6 +6,10 @@ import process from "node:process";
 const startedAt = Date.now();
 const cliPath = path.resolve("node_modules/vinext/dist/cli.js");
 const outputPath = path.resolve("dist/client/index.html");
+const gardenOutputPath = path.resolve("dist/client/garden/index.html");
+const remakeOutputPath = path.resolve("dist/client/remake/index.html");
+const remakeDataPaths = ["age", "events", "talents", "achievement", "character"]
+  .map((name) => path.resolve(`dist/client/remake-data/${name}.json`));
 
 const child = spawn(process.execPath, [cliPath, "build"], {
   stdio: "inherit",
@@ -28,14 +32,39 @@ if (exitCode === 0) process.exit(0);
 // every non-zero build exit.
 if (process.platform === "win32") {
   try {
-    const [outputStat, html] = await Promise.all([
+    const [
+      outputStat,
+      gardenOutputStat,
+      remakeOutputStat,
+      html,
+      gardenHtml,
+      remakeHtml,
+      ...remakeDataStats
+    ] = await Promise.all([
       stat(outputPath),
+      stat(gardenOutputPath),
+      stat(remakeOutputPath),
       readFile(outputPath, "utf8"),
+      readFile(gardenOutputPath, "utf8"),
+      readFile(remakeOutputPath, "utf8"),
+      ...remakeDataPaths.map((file) => stat(file)),
     ]);
-    const isFresh = outputStat.mtimeMs >= startedAt - 2_000;
+    const isFresh =
+      outputStat.mtimeMs >= startedAt - 2_000 &&
+      gardenOutputStat.mtimeMs >= startedAt - 2_000 &&
+      remakeOutputStat.mtimeMs >= startedAt - 2_000 &&
+      remakeDataStats.every(({ size }) => size > 1_000);
     const isComplete =
       html.includes("万雨铭") &&
       html.includes("张锦") &&
+      html.includes('href="/garden/"') &&
+      gardenHtml.includes("第一块小花园") &&
+      gardenHtml.includes('data-memory-garden="first-garden"') &&
+      html.includes('href="/remake/"') &&
+      remakeHtml.includes("要不要，再写一次人生") &&
+      remakeHtml.includes('data-life-remake="original-zh-cn-complete-loop"') &&
+      remakeHtml.includes("</html>") &&
+      gardenHtml.includes("</html>") &&
       html.includes("</html>");
 
     if (isFresh && isComplete) {

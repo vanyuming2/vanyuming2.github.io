@@ -2,71 +2,91 @@
 
 import { useEffect, useState } from "react";
 
+import GardenInvitation from "./GardenInvitation";
+import LifeInvitation from "./LifeInvitation";
+import MemoryQuest from "./MemoryQuest";
+
 const START_TIME = new Date("2026-04-29T00:17:00+08:00").getTime();
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
-const HOUR_IN_MS = 60 * 60 * 1000;
-const MINUTE_IN_MS = 60 * 1000;
 
-type TimeParts = {
+type ElapsedTime = {
   days: number;
-  hours: number;
-  minutes: number;
-  seconds: number;
   isCountdown: boolean;
 };
 
-const initialTime: TimeParts = {
+const initialTime: ElapsedTime = {
   days: 0,
-  hours: 0,
-  minutes: 0,
-  seconds: 0,
   isCountdown: false,
 };
 
-function splitTime(now: number): TimeParts {
+const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
+  timeZone: "Asia/Shanghai",
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  weekday: "long",
+});
+
+const letters = [
+  {
+    number: "01",
+    date: "2007.09",
+    dateTime: "2007-09",
+    label: "第一次认识你",
+    title: "我从这里开始认识你",
+    text: "三年级，我转到实验小学，和你成了同班同桌。你是班长，总在早读时站在前面，活泼、明亮，好像每天都有用不完的力气。因为两家父母是同事，我们在放学以后也常常见面。那时的我还不懂什么是喜欢，只是很自然地把你充满生命力的样子记了很多年。",
+  },
+  {
+    number: "02",
+    date: "2025.09",
+    dateTime: "2025-09",
+    label: "我们又聊起来了",
+    title: "熟悉好像从来没有走远",
+    text: "隔了很多年，我们又从一句句近况开始聊天。后来消息慢慢变多，我也重新认识了现在的你。小时候那个熟悉的人已经有了新的模样，可和你说话时的自然，好像一直都还在。",
+  },
+  {
+    number: "03",
+    date: "2026.04.29",
+    dateTime: "2026-04-29T00:17:00+08:00",
+    label: "我把喜欢说出来",
+    title: "这一次，我想认真走近你",
+    text: "凌晨 00:17，我终于把喜欢说了出来。它不是故事的开头，却是我们一起往下写的新一页。从那以后，我更期待知道你的日常，也在等这个八月回家见你。",
+  },
+];
+
+function getElapsed(now: number): ElapsedTime {
   const rawDistance = now - START_TIME;
-  const distance = Math.abs(rawDistance);
 
   return {
-    days: Math.floor(distance / DAY_IN_MS),
-    hours: Math.floor((distance % DAY_IN_MS) / HOUR_IN_MS),
-    minutes: Math.floor((distance % HOUR_IN_MS) / MINUTE_IN_MS),
-    seconds: Math.floor((distance % MINUTE_IN_MS) / 1000),
+    days: Math.floor(Math.abs(rawDistance) / DAY_IN_MS),
     isCountdown: rawDistance < 0,
   };
 }
 
-function pad(value: number) {
-  return String(value).padStart(2, "0");
+function formatToday(now: number) {
+  return dateFormatter.format(new Date(now)).replace(/(星期.)$/, " · $1");
 }
 
 export default function Home() {
-  const [time, setTime] = useState<TimeParts>(initialTime);
+  const [time, setTime] = useState<ElapsedTime>(initialTime);
+  const [today, setToday] = useState("今天");
   const [hasStarted, setHasStarted] = useState(false);
-  const [accessibleSummary, setAccessibleSummary] = useState("");
 
   useEffect(() => {
     let intervalId: number | undefined;
 
     const updateTime = () => {
-      const nextTime = splitTime(Date.now());
-      setTime(nextTime);
+      const now = Date.now();
+      setTime(getElapsed(now));
+      setToday(formatToday(now));
       setHasStarted(true);
-
-      const prefix = nextTime.isCountdown
-        ? "距离故事开始还有"
-        : "我们已经一起走过";
-      const summary = `${prefix}${nextTime.days}天${nextTime.hours}小时${nextTime.minutes}分钟`;
-      setAccessibleSummary((current) =>
-        current === summary ? current : summary,
-      );
     };
 
     updateTime();
     const timeoutId = window.setTimeout(() => {
       updateTime();
-      intervalId = window.setInterval(updateTime, 1000);
-    }, 1020 - (Date.now() % 1000));
+      intervalId = window.setInterval(updateTime, 60 * 1000);
+    }, 60_020 - (Date.now() % (60 * 1000)));
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") updateTime();
@@ -81,133 +101,133 @@ export default function Home() {
     };
   }, []);
 
-  const timerHeading = time.isCountdown
-    ? "距离我们的故事开始还有"
-    : "我们已经一起走过";
+  const timerLabel = time.isCountdown ? "距离那天" : "从那天到现在";
+  const accessibleSummary = time.isCountdown
+    ? `距离告白还有 ${time.days} 天`
+    : `从告白那天起已经过了 ${time.days} 天`;
 
   return (
-    <main>
-      <div className="ambient" aria-hidden="true">
-        <span className="ambientOrb ambientOrbOne" />
-        <span className="ambientOrb ambientOrbTwo" />
-        <span className="fineLine fineLineOne" />
-        <span className="fineLine fineLineTwo" />
+    <main className="night">
+      <div className="skyGlow" aria-hidden="true" />
+      <div className="ambientStars" aria-hidden="true">
+        {Array.from({ length: 10 }, (_, index) => (
+          <i key={index} />
+        ))}
+        <span className="shootingLight" />
       </div>
 
-      <section className="hero" aria-labelledby="hero-title">
-        <div className="heroContent">
-          <p className="eyebrow">OUR LITTLE FOREVER</p>
+      <header className="nightHeader">
+        <a href="#top" className="names" aria-label="回到页面顶部">
+          万雨铭 <span>和</span> 张锦
+        </a>
+        <time>{today}</time>
+      </header>
 
-          <h1 id="hero-title" className="names">
-            <span>万雨铭</span>
-            <span className="heartDivider" aria-hidden="true">
-              <span className="heartLine" />
-              <span className="heart">♡</span>
-              <span className="heartLine" />
-            </span>
-            <span>张锦</span>
-          </h1>
-
-          <p className="heroSentence">从那一刻起，时间有了温度。</p>
-
-          <div className="timerCard">
-            <p className="timerHeading">{timerHeading}</p>
-
-            <div
-              className={`timerVisual${hasStarted ? " isReady" : ""}`}
-              aria-hidden="true"
-            >
-              <div className="daysBlock">
-                <span className="daysNumber">
-                  {hasStarted ? time.days : "—"}
-                </span>
-                <span className="daysLabel">天</span>
-              </div>
-
-              <div className="timeGrid">
-                <div className="timeUnit">
-                  <span className="timeValue">
-                    {hasStarted ? pad(time.hours) : "—"}
-                  </span>
-                  <span className="timeLabel">小时</span>
-                </div>
-                <span className="timeDot">·</span>
-                <div className="timeUnit">
-                  <span className="timeValue">
-                    {hasStarted ? pad(time.minutes) : "—"}
-                  </span>
-                  <span className="timeLabel">分钟</span>
-                </div>
-                <span className="timeDot">·</span>
-                <div className="timeUnit">
-                  <span className="timeValue">
-                    {hasStarted ? pad(time.seconds) : "—"}
-                  </span>
-                  <span className="timeLabel">秒</span>
-                </div>
-              </div>
-            </div>
-
-            <p className="srOnly" aria-live="polite" aria-atomic="true">
-              {accessibleSummary}
-            </p>
-
-            <div className="startStamp">
-              <span aria-hidden="true">✦</span>
-              <time dateTime="2026-04-29T00:17:00+08:00">
-                始于 2026.04.29 · 00:17 · 上海时间
-              </time>
-            </div>
-          </div>
-
-          <a className="scrollCue" href="#letter" aria-label="继续阅读">
-            <span>往下，是想说给你听的话</span>
-            <i aria-hidden="true" />
-          </a>
+      <section id="top" className="starHero" aria-labelledby="page-title">
+        <div className="starStage" aria-hidden="true">
+          <i className="starAura" />
+          <i className="starOrbit" />
+          <span className="warmStar">⭐</span>
+          <i className="littleSpark littleSparkOne" />
+          <i className="littleSpark littleSparkTwo" />
         </div>
+
+        <p className="forYou">写给张锦</p>
+        <h1 id="page-title">今晚也想和你说说话。</h1>
+
+        <div className="elapsed" aria-label={accessibleSummary}>
+          <p>{timerLabel}</p>
+          <div>
+            <span>第</span>
+            <strong>{hasStarted ? time.days : "—"}</strong>
+            <span>天</span>
+          </div>
+          <time dateTime="2026-04-29T00:17:00+08:00">
+            开始于 2026.04.29 · 00:17
+          </time>
+          <p className="srOnly" aria-live="polite" aria-atomic="true">
+            {hasStarted ? accessibleSummary : ""}
+          </p>
+        </div>
+
+        <p className="originThought">离见面，又近了一天。</p>
       </section>
 
-      <section id="letter" className="letterSection" aria-labelledby="letter-title">
-        <div className="letterCard">
-          <p className="letterKicker">TO US</p>
-          <h2 id="letter-title">写给我们的以后</h2>
+      <section className="nightBody" aria-label="最近的事情">
+        <article className="meetingCard">
+          <div className="sectionMeta">
+            <p>这个八月</p>
+            <time dateTime="2026-08">2026 年 8 月</time>
+          </div>
+          <h2>等回家见你的那一天。</h2>
+          <p>你暑假在家，我也准备回去找你玩。离见面，又近了一点。</p>
+          <span>八月见</span>
+        </article>
+
+        <aside className="quietNote">
+          <p>今晚留一句</p>
           <blockquote>
-            愿我们把每一个寻常的今天，
-            <br />
-            慢慢过成值得珍藏的后来。
+            隔了这么久，和你说话还是很自然。这件事，我很喜欢。
           </blockquote>
+          <span>雨铭</span>
+        </aside>
+      </section>
 
-          <div className="storyLine" aria-label="我们的故事时间线">
-            <div className="storyItem">
-              <span className="storyIndex">01</span>
-              <div>
-                <h3>那一刻</h3>
-                <p>2026 年 4 月 29 日，00:17</p>
-              </div>
-            </div>
-            <div className="storyItem">
-              <span className="storyIndex">02</span>
-              <div>
-                <h3>每一天</h3>
-                <p>认真收藏所有平凡的小事</p>
-              </div>
-            </div>
-            <div className="storyItem">
-              <span className="storyIndex">∞</span>
-              <div>
-                <h3>很久以后</h3>
-                <p>仍然愿意和你分享日落与晚风</p>
-              </div>
-            </div>
+      <section className="lettersSection" aria-labelledby="letters-title">
+        <header className="lettersHeading">
+          <div>
+            <p>三封信</p>
+            <h2 id="letters-title">写给三个时期的你</h2>
           </div>
+          <span>轻点信封，慢慢打开</span>
+        </header>
 
-          <p className="signature">万雨铭 &amp; 张锦</p>
+        <div className="envelopeGrid">
+          {letters.map((letter) => (
+            <details
+              className="envelopeItem"
+              key={letter.number}
+              name="memory-letters"
+            >
+              <summary aria-label={`打开 ${letter.date} 的信`}>
+                <div className="envelopeArt" aria-hidden="true">
+                  <span className="envelopeBack" />
+                  <span className="letterPeek">
+                    <time>{letter.date}</time>
+                  </span>
+                  <span className="envelopeFront" />
+                  <span className="envelopeFlap" />
+                  <span className="envelopeSeal" />
+                </div>
+
+                <div className="envelopeCaption">
+                  <p>{letter.label}</p>
+                  <time>{letter.date}</time>
+                </div>
+              </summary>
+
+              <article className="letterContent">
+                <div>
+                  <time dateTime={letter.dateTime}>{letter.date}</time>
+                  <h3>{letter.title}</h3>
+                  <p>{letter.text}</p>
+                  <span>雨铭</span>
+                </div>
+              </article>
+            </details>
+          ))}
         </div>
       </section>
 
-      <footer>
-        <span aria-hidden="true">♡</span>
-        <p>愿每一个普通日子，都值得被记住。</p>
+      <MemoryQuest />
+
+      <GardenInvitation />
+
+      <LifeInvitation />
+
+      <footer className="footer">
+        <p>这里只记我们想记的。</p>
+        <span>万雨铭 &amp; 张锦</span>
       </footer>
     </main>
   );

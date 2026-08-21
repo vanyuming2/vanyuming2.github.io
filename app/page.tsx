@@ -130,7 +130,7 @@ export default function Home() {
           <i className="littleSpark littleSparkTwo" />
         </div>
 
-        <p className="forYou">写给张老师</p>
+        <p className="forYou">偶尔更新</p>
         <h1 id="page-title">随便看看</h1>
 
         <div className="elapsed" aria-label={accessibleSummary}>

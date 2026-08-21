@@ -10,7 +10,7 @@ test("exports the finished memorial page", async () => {
   assert.match(html, /<html lang="zh-CN">/);
   assert.match(html, /万雨铭/);
   assert.match(html, /张锦/);
-  assert.match(html, /写给张老师/);
+  assert.match(html, /偶尔更新/);
   assert.doesNotMatch(html, /class="names"/);
   assert.match(html, /<h1[^>]*>随便看看<\/h1>/);
   assert.match(html, /见面再说。/);

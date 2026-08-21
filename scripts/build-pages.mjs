@@ -55,7 +55,7 @@ if (process.platform === "win32") {
       remakeOutputStat.mtimeMs >= startedAt - 2_000 &&
       remakeDataStats.every(({ size }) => size > 1_000);
     const isComplete =
-      html.includes("写给张老师") &&
+      html.includes("偶尔更新") &&
       html.includes("随便看看") &&
       html.includes("见面再说。") &&
       html.includes('class="privateArchive"') &&

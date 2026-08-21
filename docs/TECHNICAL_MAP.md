@@ -17,6 +17,9 @@
 | `app/globals.css` | 主页、信件、图标与小游戏全局视觉 |
 | `app/MemoryQuest.tsx` | 五图标收集、烟花、邀请和贪吃蛇 |
 | `app/memory-moments.ts` | 五个记忆图标的唯一配置入口 |
+| `app/PhotoCollections.tsx` | 两本闭合相册、内嵌手账单页、按钮/键盘/触摸翻页 |
+| `app/PhotoDoodles.tsx` | 12 种可独立定位、缩放、旋转和换色的 SVG 手账涂鸦 |
+| `app/photo-collections.ts` | 图片数量、顺序、公开占位路径、台词和逐页涂鸦配置入口 |
 | `app/garden/page.tsx` | 花园静态页面壳 |
 | `app/garden/GardenScene.tsx` | Three.js 花园渲染与浏览器交互 |
 | `app/garden/garden-data.ts` | 8×8 地块和物件布局数据 |
@@ -124,6 +127,10 @@ UI 不应重新实现一套不一致的事件规则。
 - `素材库/抖音图文/`：原始抓取、manifest 和核查资料，不由网页直接引用。
 - `public/memory-moments/`：五张透明记忆图标原始 PNG。
 - `public/keepsakes/`：主页实际加载的五张 128px 轻量 WebP，避免手机端下载 1254px 原图。
+- `public/photo-placeholders/`：生活图片 83 张、风格化图片 27 张的最大边 18px 马赛克 WebP，只用于闭合相册封面。
+- `public/photo-gallery/`：110 张最大边 1080px 的桌面 WebP 与 110 张最大边 640px 的手机 WebP；手账按当前视口选择一套并只预取后两页。
+- `生活中的图片/`、`风格化图片/`：本地清晰原图，被 `.gitignore` 排除，不进入静态构建或公开仓库。
+- `scripts/generate-photo-placeholders.mjs`：从两个本地目录按稳定顺序生成马赛克、桌面图和手机图；三张扩展名伪装的 HEIF 文件由 `heic-convert` 解码后进入同一生成流程。
 - `花园参考图片/`：花园美术参考，不直接在页面加载。
 
 映射与数量见 `ASSET_MANIFEST.md`。

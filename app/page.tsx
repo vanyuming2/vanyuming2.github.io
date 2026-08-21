@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import GardenInvitation from "./GardenInvitation";
 import LifeInvitation from "./LifeInvitation";
 import MemoryQuest from "./MemoryQuest";
+import PhotoCollections from "./PhotoCollections";
 
 const START_TIME = new Date("2026-04-29T00:17:00+08:00").getTime();
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
@@ -254,6 +255,8 @@ export default function Home() {
       <GardenInvitation />
 
       <LifeInvitation />
+
+      <PhotoCollections />
     </main>
   );
 }

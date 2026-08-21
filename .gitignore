@@ -23,6 +23,10 @@
 .DS_Store
 *.pem
 
+# Private photo sources. Only generated mosaic placeholders may be published.
+/生活中的图片/
+/风格化图片/
+
 # debug
 npm-debug.log*
 yarn-debug.log*

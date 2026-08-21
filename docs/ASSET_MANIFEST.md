@@ -9,6 +9,8 @@
 - `public/remake-tales/`：经过选择、排序、裁切后的发布 WebP；每张原图旁另有同名 `*.mobile.webp` 手机衍生图。
 - `public/memory-moments/`：主页五个透明图标原始 PNG。
 - `public/keepsakes/`：主页实际加载的 128px 轻量 WebP。
+- `生活中的图片/`、`风格化图片/`：私人清晰照片的本地来源目录，已被 Git 忽略，禁止直接发布。
+- `public/photo-placeholders/`：由私人照片生成的极低分辨率马赛克占位图，允许进入静态构建。
 - `花园参考图片/`：美术参考，不进入网页包。
 
 ## 发布故事资源
@@ -51,6 +53,18 @@
 - `public/keepsakes/`：上述 5 张图的 128px 无损 WebP，合计约 40 KB，供主页和小游戏直接加载。
 - `花园参考图片/`：2 张参考图，约 0.47 MB。仅用于审美对照，不作为页面纹理或成品素材发布。
 - `public/og.png`：社交分享图。修改主页视觉时需单独核对是否仍匹配当前版本。
+
+## 私人图片栏目
+
+- `生活中的图片/`：83 张可读取图片，另有 1 个 MP4；本轮只处理图片，视频不进入栏目。
+- `风格化图片/`：27 张 PNG。
+- `public/photo-placeholders/life/`：83 张最大边 18px 的 WebP，顺序编号 `life-001`—`life-083`。
+- `public/photo-placeholders/styled/`：27 张最大边 18px 的 WebP，顺序编号 `styled-001`—`styled-027`。
+- `public/photo-gallery/life/`：83 张最大边 1080px 桌面 WebP + 83 张最大边 640px 手机 WebP。
+- `public/photo-gallery/styled/`：27 张最大边 1080px 桌面 WebP + 27 张最大边 640px 手机 WebP。
+- 110 张占位图合计约 9.4 KB；220 张清晰网页衍生图合计约 14.62 MB，单文件最大约 335 KB，生成时不保留原始元数据。
+- 三张实际为 HEIF 数据但使用 `.png` 扩展名的生活图片通过 `heic-convert` 解码后生成正常网页图，不再以哈希色块替代。
+- 用户已在 2026-08-22 明确要求插入全部图片；授权范围是 `public/photo-gallery/` 中的压缩衍生图，不包括两个被忽略的本地原始文件夹与 MP4。
 
 ## 新素材接入规则
 

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { access, readFile, stat } from "node:fs/promises";
+import { access, readFile, readdir, stat } from "node:fs/promises";
 import test from "node:test";
 
 const root = new URL("../", import.meta.url);
@@ -108,6 +108,80 @@ test("keeps the memory icons replaceable and ships the mini game", async () => {
     const icon = new URL(`dist/client/keepsakes/${name}`, root);
     await access(icon);
     assert.ok((await stat(icon)).size < 15_000, `${name} should stay lightweight`);
+  }));
+});
+
+test("exports two photo collections as closed scrapbooks with responsive real images", async () => {
+  const [html, collections, gallery, doodles] = await Promise.all([
+    readFile(new URL("dist/client/index.html", root), "utf8"),
+    readFile(new URL("app/photo-collections.ts", root), "utf8"),
+    readFile(new URL("app/PhotoCollections.tsx", root), "utf8"),
+    readFile(new URL("app/PhotoDoodles.tsx", root), "utf8"),
+  ]);
+
+  assert.match(html, /生活中的图片/);
+  assert.match(html, /风格化图片/);
+  assert.match(html, /83(?:<!-- -->)? 页/);
+  assert.match(html, /27(?:<!-- -->)? 页/);
+  assert.match(html, /翻开/);
+  assert.doesNotMatch(html, /生活 01|风格 01|台词待写/);
+  assert.match(collections, /lifeCount\s*=\s*83/);
+  assert.match(collections, /styledCount\s*=\s*27/);
+  assert.match(gallery, /journalPhotoArea/);
+  assert.match(gallery, /PhotoDoodle/);
+  assert.match(gallery, /<picture/);
+  assert.match(gallery, /mobileImagePath/);
+  assert.match(gallery, /onTouchStart/);
+  assert.match(gallery, /ArrowLeft/);
+  assert.match(gallery, /imageRendering:\s*"pixelated"/);
+  assert.doesNotMatch(gallery, /photoCollectionGrid/);
+  assert.doesNotMatch(gallery, /生活中的图片\//);
+  assert.doesNotMatch(gallery, /风格化图片\//);
+  assert.match(doodles, /<svg/);
+  for (const doodle of [
+    "arrow", "cat-ears", "circle", "crown", "goose", "mustache",
+    "scribble", "spark", "speech", "starfish", "tape", "underline",
+  ]) {
+    assert.match(doodles, new RegExp(doodle));
+  }
+
+  const [lifeFiles, styledFiles] = await Promise.all([
+    readdir(new URL("dist/client/photo-placeholders/life/", root)),
+    readdir(new URL("dist/client/photo-placeholders/styled/", root)),
+  ]);
+  assert.equal(lifeFiles.filter((name) => name.endsWith(".webp")).length, 83);
+  assert.equal(styledFiles.filter((name) => name.endsWith(".webp")).length, 27);
+
+  const samples = [
+    "dist/client/photo-placeholders/life/life-001.webp",
+    "dist/client/photo-placeholders/life/life-083.webp",
+    "dist/client/photo-placeholders/styled/styled-001.webp",
+    "dist/client/photo-placeholders/styled/styled-027.webp",
+  ];
+  await Promise.all(samples.map(async (path) => {
+    const file = new URL(path, root);
+    await access(file);
+    assert.ok((await stat(file)).size < 10_000, `${path} should stay private and lightweight`);
+  }));
+
+  const [lifeGalleryFiles, styledGalleryFiles] = await Promise.all([
+    readdir(new URL("dist/client/photo-gallery/life/", root)),
+    readdir(new URL("dist/client/photo-gallery/styled/", root)),
+  ]);
+  assert.equal(lifeGalleryFiles.filter((name) => name.endsWith(".webp")).length, 166);
+  assert.equal(styledGalleryFiles.filter((name) => name.endsWith(".webp")).length, 54);
+
+  const gallerySamples = [
+    "dist/client/photo-gallery/life/life-001.webp",
+    "dist/client/photo-gallery/life/life-083-mobile.webp",
+    "dist/client/photo-gallery/styled/styled-001.webp",
+    "dist/client/photo-gallery/styled/styled-027-mobile.webp",
+  ];
+  await Promise.all(gallerySamples.map(async (path) => {
+    const file = new URL(path, root);
+    await access(file);
+    const { size } = await stat(file);
+    assert.ok(size > 1_000 && size < 800_000, `${path} should be a usable web derivative`);
   }));
 });
 

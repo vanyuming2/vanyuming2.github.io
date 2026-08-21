@@ -71,6 +71,7 @@ export default function Home() {
   const [time, setTime] = useState<ElapsedTime>(initialTime);
   const [today, setToday] = useState("今天");
   const [hasStarted, setHasStarted] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
 
   useEffect(() => {
     let intervalId: number | undefined;
@@ -117,9 +118,6 @@ export default function Home() {
       </div>
 
       <header className="nightHeader">
-        <a href="#top" className="names" aria-label="回到页面顶部">
-          万雨铭 <span>和</span> 张锦
-        </a>
         <time>{today}</time>
       </header>
 
@@ -132,8 +130,8 @@ export default function Home() {
           <i className="littleSpark littleSparkTwo" />
         </div>
 
-        <p className="forYou">写给张锦</p>
-        <h1 id="page-title">今晚也想和你说说话。</h1>
+        <p className="forYou">写给张老师</p>
+        <h1 id="page-title">随便看看</h1>
 
         <div className="elapsed" aria-label={accessibleSummary}>
           <p>{timerLabel}</p>
@@ -150,85 +148,112 @@ export default function Home() {
           </p>
         </div>
 
-        <p className="originThought">离见面，又近了一天。</p>
+        <p className="originThought">见面再说。</p>
       </section>
 
-      <section className="nightBody" aria-label="最近的事情">
-        <article className="meetingCard">
-          <div className="sectionMeta">
-            <p>这个八月</p>
-            <time dateTime="2026-08">2026 年 8 月</time>
+      <details className="privateArchive" open={archiveOpen}>
+        <summary
+          className="privateArchiveCover"
+          aria-label="查看隐藏的私人记录"
+          aria-expanded={archiveOpen}
+          onClick={(event) => {
+            event.preventDefault();
+            setArchiveOpen((isOpen) => !isOpen);
+          }}
+        >
+          <span className="privateArchiveTag">私人记录</span>
+          <span className="privateArchiveBars" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+            <i />
+          </span>
+          <span className="privateArchiveAction">
+            <span className="privateArchiveClosed">这里留了一些东西 · 点击查看</span>
+            <span className="privateArchiveOpen">收起来</span>
+          </span>
+        </summary>
+
+        <div className="privateArchiveContent">
+          <div className="privateArchiveNotice" role="status">
+            <p>这部分显示有点问题，暂时隐藏内容。</p>
           </div>
-          <h2>等回家见你的那一天。</h2>
-          <p>你暑假在家，我也准备回去找你玩。离见面，又近了一点。</p>
-          <span>八月见</span>
-        </article>
 
-        <aside className="quietNote">
-          <p>今晚留一句</p>
-          <blockquote>
-            隔了这么久，和你说话还是很自然。这件事，我很喜欢。
-          </blockquote>
-          <span>雨铭</span>
-        </aside>
-      </section>
-
-      <section className="lettersSection" aria-labelledby="letters-title">
-        <header className="lettersHeading">
-          <div>
-            <p>三封信</p>
-            <h2 id="letters-title">写给三个时期的你</h2>
-          </div>
-          <span>轻点信封，慢慢打开</span>
-        </header>
-
-        <div className="envelopeGrid">
-          {letters.map((letter) => (
-            <details
-              className="envelopeItem"
-              key={letter.number}
-              name="memory-letters"
-            >
-              <summary aria-label={`打开 ${letter.date} 的信`}>
-                <div className="envelopeArt" aria-hidden="true">
-                  <span className="envelopeBack" />
-                  <span className="letterPeek">
-                    <time>{letter.date}</time>
-                  </span>
-                  <span className="envelopeFront" />
-                  <span className="envelopeFlap" />
-                  <span className="envelopeSeal" />
+          <div className="privateArchiveStored" hidden>
+            <section className="nightBody" aria-label="最近的事情">
+              <article className="meetingCard">
+                <div className="sectionMeta">
+                  <p>这个八月</p>
+                  <time dateTime="2026-08">2026 年 8 月</time>
                 </div>
-
-                <div className="envelopeCaption">
-                  <p>{letter.label}</p>
-                  <time>{letter.date}</time>
-                </div>
-              </summary>
-
-              <article className="letterContent">
-                <div>
-                  <time dateTime={letter.dateTime}>{letter.date}</time>
-                  <h3>{letter.title}</h3>
-                  <p>{letter.text}</p>
-                  <span>雨铭</span>
-                </div>
+                <h2>等回家见你的那一天。</h2>
+                <p>你暑假在家，我也准备回去找你玩。离见面，又近了一点。</p>
+                <span>八月见</span>
               </article>
-            </details>
-          ))}
+
+              <aside className="quietNote">
+                <p>今晚留一句</p>
+                <blockquote>
+                  隔了这么久，和你说话还是很自然。这件事，我很喜欢。
+                </blockquote>
+                <span>雨铭</span>
+              </aside>
+            </section>
+
+            <section className="lettersSection" aria-labelledby="letters-title">
+              <header className="lettersHeading">
+                <div>
+                  <p>三封信</p>
+                  <h2 id="letters-title">写给三个时期的你</h2>
+                </div>
+                <span>轻点信封，慢慢打开</span>
+              </header>
+
+              <div className="envelopeGrid">
+                {letters.map((letter) => (
+                  <details
+                    className="envelopeItem"
+                    key={letter.number}
+                    name="memory-letters"
+                  >
+                    <summary aria-label={`打开 ${letter.date} 的信`}>
+                      <div className="envelopeArt" aria-hidden="true">
+                        <span className="envelopeBack" />
+                        <span className="letterPeek">
+                          <time>{letter.date}</time>
+                        </span>
+                        <span className="envelopeFront" />
+                        <span className="envelopeFlap" />
+                        <span className="envelopeSeal" />
+                      </div>
+
+                      <div className="envelopeCaption">
+                        <p>{letter.label}</p>
+                        <time>{letter.date}</time>
+                      </div>
+                    </summary>
+
+                    <article className="letterContent">
+                      <div>
+                        <time dateTime={letter.dateTime}>{letter.date}</time>
+                        <h3>{letter.title}</h3>
+                        <p>{letter.text}</p>
+                        <span>雨铭</span>
+                      </div>
+                    </article>
+                  </details>
+                ))}
+              </div>
+            </section>
+          </div>
         </div>
-      </section>
+      </details>
 
       <MemoryQuest />
 
       <GardenInvitation />
 
       <LifeInvitation />
-
-      <footer className="footer">
-        <p>这里只记我们想记的。</p>
-        <span>万雨铭 &amp; 张锦</span>
-      </footer>
     </main>
   );
 }

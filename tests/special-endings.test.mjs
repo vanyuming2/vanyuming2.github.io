@@ -7,6 +7,14 @@ const root = new URL("../", import.meta.url);
 const source = await readFile(new URL("app/remake/special-endings.ts", root), "utf8");
 const overridesSource = await readFile(new URL("app/remake/site-event-overrides.ts", root), "utf8");
 const cultivationSource = await readFile(new URL("app/remake/cultivation-route.ts", root), "utf8");
+const engineSource = await readFile(new URL("app/life/remake-engine.ts", root), "utf8");
+const engineJavaScript = ts.transpileModule(engineSource, {
+  compilerOptions: {
+    module: ts.ModuleKind.ES2022,
+    target: ts.ScriptTarget.ES2022,
+  },
+}).outputText;
+const engineModule = await import(`data:text/javascript;base64,${Buffer.from(engineJavaScript).toString("base64")}`);
 const javaScript = ts.transpileModule(source, {
   compilerOptions: {
     module: ts.ModuleKind.ES2022,
@@ -14,7 +22,7 @@ const javaScript = ts.transpileModule(source, {
   },
 }).outputText.replace(
   /^import\s*\{[\s\S]*?\}\s*from\s*"\.\/site-event-overrides";\s*/m,
-  'const CTHULHU_CEMETERY_EVENT_ID = "site-cthulhu-cemetery-dive"; const CTHULHU_CEMETERY_MAX_AGE = 32; const CTHULHU_CEMETERY_MIN_AGE = 24; const CTHULHU_CEMETERY_TALENT_ID = "site-cthulhu-cemetery"; const DOUBLE_FISH_EVENT_AGE = 21; const DOUBLE_FISH_EVENT_ID = "site-double-fish-jade-crossing"; const DOUBLE_FISH_TALENT_ID = "site-double-fish-aerial-negative"; const EIGHTIES_GHOST_EVENT_ID = "site-eighties-ghost-file"; const EIGHT_FOOT_WOMAN_EVENT_ID = "site-eight-foot-woman-return"; const EIGHT_FOOT_WOMAN_MAX_AGE = 23; const EIGHT_FOOT_WOMAN_MIN_AGE = 19; const EIGHT_FOOT_WOMAN_TALENT_ID = "site-eight-foot-woman-sensitivity"; const GONGGONG_BLOODLINE_TALENT_ID = "site-gonggong-bloodline"; const GONGGONG_ZHURONG_EVENT_ID = "site-gonggong-zhurong-crossing"; const GONGGONG_ZHURONG_MAX_AGE = 25; const GONGGONG_ZHURONG_MIN_AGE = 18; const KUNLUN_BONES_EVENT_ID = "site-kunlun-bones-expedition"; const KUNLUN_BONES_MAX_AGE = 36; const KUNLUN_BONES_MIN_AGE = 26; const KUNLUN_BONES_TALENT_ID = "site-kunlun-bone-compass"; const MALE_BIRTH_EVENT_ID = "10001"; const PENGLAI_EVENT_ID = "site-penglai-route-crossing"; const PENGLAI_MAX_AGE = 35; const PENGLAI_MIN_AGE = 20; const PENGLAI_TALENT_ID = "site-penglai-sea-fog"; const SAND_SEA_EVENT_ID = "site-sand-sea-beneath"; const SAND_SEA_MAX_AGE = 38; const SAND_SEA_MIN_AGE = 28; const SAND_SEA_TALENT_ID = "site-sand-sea-stone-seal"; const SHAMBHALA_EVENT_AGE = 20; const SHAMBHALA_EVENT_ID = "site-shambhala-entry"; const SHAMBHALA_TALENT_ID = "site-shambhala-manuscript"; const SPECIAL_PROLOGUE_EVENT_IDS = { shambhala:["site-prologue-shambhala-family","site-prologue-shambhala-study"], gonggong:["site-prologue-gonggong-dream","site-prologue-gonggong-flood-record"], penglai:["site-prologue-penglai-course","site-prologue-penglai-invitation"], doubleFish:["site-prologue-double-fish-major","site-prologue-double-fish-archive"], cthulhuCemetery:["site-prologue-cthulhu-major","site-prologue-cthulhu-project"], kunlunBones:["site-prologue-kunlun-reporter","site-prologue-kunlun-parcel"], sandSea:["site-prologue-sand-sea-major","site-prologue-sand-sea-drive"], eightFootWoman:["site-prologue-eight-foot-childhood","site-prologue-eight-foot-return"] }; const SPECIAL_RUMOR_EVENT_IDS = { unloadedHometown:"site-rumor-unloaded-hometown", shambhala:"site-rumor-shambhala", eightiesRoom:"site-rumor-eighties-room", gonggong:"site-rumor-gonggong", penglai:"site-rumor-penglai", doubleFish:"site-rumor-double-fish", cthulhuCemetery:"site-rumor-cthulhu-cemetery", kunlunBones:"site-rumor-kunlun-bones", sandSea:"site-rumor-sand-sea", eightFootWoman:"site-rumor-eight-foot-woman" };\n',
+  'const CTHULHU_CEMETERY_EVENT_ID = "site-cthulhu-cemetery-dive"; const CTHULHU_CEMETERY_MAX_AGE = 32; const CTHULHU_CEMETERY_MIN_AGE = 24; const CTHULHU_CEMETERY_TALENT_ID = "site-cthulhu-cemetery"; const DOUBLE_FISH_EVENT_AGE = 21; const DOUBLE_FISH_EVENT_ID = "site-double-fish-jade-crossing"; const DOUBLE_FISH_TALENT_ID = "site-double-fish-aerial-negative"; const EIGHTIES_GHOST_EVENT_ID = "site-eighties-ghost-file"; const EIGHT_FOOT_WOMAN_EVENT_ID = "site-eight-foot-woman-return"; const EIGHT_FOOT_WOMAN_MAX_AGE = 23; const EIGHT_FOOT_WOMAN_MIN_AGE = 19; const EIGHT_FOOT_WOMAN_TALENT_ID = "site-eight-foot-woman-sensitivity"; const GONGGONG_BLOODLINE_TALENT_ID = "site-gonggong-bloodline"; const GONGGONG_ZHURONG_EVENT_ID = "site-gonggong-zhurong-crossing"; const GONGGONG_ZHURONG_MAX_AGE = 25; const GONGGONG_ZHURONG_MIN_AGE = 18; const KUNLUN_BONES_EVENT_ID = "site-kunlun-bones-expedition"; const KUNLUN_BONES_MAX_AGE = 36; const KUNLUN_BONES_MIN_AGE = 26; const KUNLUN_BONES_TALENT_ID = "site-kunlun-bone-compass"; const MALE_BIRTH_EVENT_ID = "10001"; const PENGLAI_EVENT_ID = "site-penglai-route-crossing"; const PENGLAI_MAX_AGE = 35; const PENGLAI_MIN_AGE = 20; const PENGLAI_TALENT_ID = "site-penglai-sea-fog"; const SAND_SEA_EVENT_ID = "site-sand-sea-beneath"; const SAND_SEA_MAX_AGE = 38; const SAND_SEA_MIN_AGE = 28; const SAND_SEA_TALENT_ID = "site-sand-sea-stone-seal"; const SHAMBHALA_EVENT_AGE = 20; const SHAMBHALA_EVENT_ID = "site-shambhala-entry"; const SHAMBHALA_TALENT_ID = "site-shambhala-manuscript"; const SPECIAL_PROLOGUE_EVENT_IDS = { shambhala:["site-prologue-shambhala-family","site-prologue-shambhala-study"], gonggong:["site-prologue-gonggong-dream","site-prologue-gonggong-flood-record"], penglai:["site-prologue-penglai-course","site-prologue-penglai-invitation"], doubleFish:["site-prologue-double-fish-major","site-prologue-double-fish-archive"], cthulhuCemetery:["site-prologue-cthulhu-major","site-prologue-cthulhu-project"], kunlunBones:["site-prologue-kunlun-reporter","site-prologue-kunlun-parcel"], sandSea:["site-prologue-sand-sea-major","site-prologue-sand-sea-drive"], eightFootWoman:["site-prologue-eight-foot-childhood","site-prologue-eight-foot-return"] }; const SPECIAL_RUMOR_EVENT_IDS = { unloadedHometown:"site-rumor-unloaded-hometown", shambhala:"site-rumor-shambhala", eightiesRoom:"site-rumor-eighties-room", gonggong:"site-rumor-gonggong", penglai:"site-rumor-penglai", doubleFish:"site-rumor-double-fish", cthulhuCemetery:"site-rumor-cthulhu-cemetery", kunlunBones:"site-rumor-kunlun-bones", sandSea:"site-rumor-sand-sea", eightFootWoman:"site-rumor-eight-foot-woman" }; const UNLOADED_HOMETOWN_EVENT_ID = "site-unloaded-hometown-entry";\n',
 );
 const endings = await import(`data:text/javascript;base64,${Buffer.from(javaScript).toString("base64")}`);
 const cultivationJavaScript = ts.transpileModule(cultivationSource, {
@@ -27,6 +35,15 @@ const cultivation = await import(`data:text/javascript;base64,${Buffer.from(cult
 const cultivationBindings = {
   CULTIVATION_CHAPTER_WEIGHT: cultivation.CULTIVATION_CHAPTER_WEIGHT,
   CULTIVATION_ROUTE_CHAPTERS: cultivation.CULTIVATION_ROUTE_CHAPTERS,
+  CULTIVATION_SIDE_EVENTS: cultivation.CULTIVATION_SIDE_EVENTS,
+  CULTIVATION_SIDE_EVENT_WEIGHT: cultivation.CULTIVATION_SIDE_EVENT_WEIGHT,
+  FIRST_CULTIVATION_EVENT: cultivation.FIRST_CULTIVATION_EVENT,
+  FIRST_CULTIVATION_EVENT_ID: cultivation.FIRST_CULTIVATION_EVENT_ID,
+  FIRST_CULTIVATION_END_AGE: cultivation.FIRST_CULTIVATION_END_AGE,
+  FIRST_CULTIVATION_END_EVENT: cultivation.FIRST_CULTIVATION_END_EVENT,
+  FIRST_CULTIVATION_END_EVENT_ID: cultivation.FIRST_CULTIVATION_END_EVENT_ID,
+  FIRST_CULTIVATION_OPPORTUNITY_EVENT: cultivation.FIRST_CULTIVATION_OPPORTUNITY_EVENT,
+  FIRST_CULTIVATION_OPPORTUNITY_EVENT_ID: cultivation.FIRST_CULTIVATION_OPPORTUNITY_EVENT_ID,
   IMMORTAL_BOOK_EVENT_WEIGHT: cultivation.IMMORTAL_BOOK_EVENT_WEIGHT,
   IMMORTAL_BOOK_MAX_AGE: cultivation.IMMORTAL_BOOK_MAX_AGE,
   IMMORTAL_BOOK_MIN_AGE: cultivation.IMMORTAL_BOOK_MIN_AGE,
@@ -35,6 +52,7 @@ const cultivationBindings = {
   RED_PILL_TALENT: cultivation.RED_PILL_TALENT,
   RED_PILL_TALENT_ID: cultivation.RED_PILL_TALENT_ID,
   SITE_ACHIEVEMENTS: cultivation.SITE_ACHIEVEMENTS,
+  SMALL_BOX_TALENT_ID: cultivation.SMALL_BOX_TALENT_ID,
 };
 const overridesJavaScript = ts.transpileModule(overridesSource, {
   compilerOptions: {
@@ -43,7 +61,7 @@ const overridesJavaScript = ts.transpileModule(overridesSource, {
   },
 }).outputText.replace(
   /^import\s*\{[\s\S]*?\}\s*from\s*"\.\/cultivation-route";\s*/m,
-  `const { CULTIVATION_CHAPTER_WEIGHT, CULTIVATION_ROUTE_CHAPTERS, IMMORTAL_BOOK_EVENT_WEIGHT, IMMORTAL_BOOK_MAX_AGE, IMMORTAL_BOOK_MIN_AGE, IMMORTAL_BOOK_OPPORTUNITY_EVENT, IMMORTAL_BOOK_OPPORTUNITY_EVENT_ID, RED_PILL_TALENT, RED_PILL_TALENT_ID, SITE_ACHIEVEMENTS } = ${JSON.stringify(cultivationBindings)};\n`,
+  `const { CULTIVATION_CHAPTER_WEIGHT, CULTIVATION_ROUTE_CHAPTERS, CULTIVATION_SIDE_EVENTS, CULTIVATION_SIDE_EVENT_WEIGHT, FIRST_CULTIVATION_EVENT, FIRST_CULTIVATION_EVENT_ID, FIRST_CULTIVATION_END_AGE, FIRST_CULTIVATION_END_EVENT, FIRST_CULTIVATION_END_EVENT_ID, FIRST_CULTIVATION_OPPORTUNITY_EVENT, FIRST_CULTIVATION_OPPORTUNITY_EVENT_ID, IMMORTAL_BOOK_EVENT_WEIGHT, IMMORTAL_BOOK_MAX_AGE, IMMORTAL_BOOK_MIN_AGE, IMMORTAL_BOOK_OPPORTUNITY_EVENT, IMMORTAL_BOOK_OPPORTUNITY_EVENT_ID, RED_PILL_TALENT, RED_PILL_TALENT_ID, SITE_ACHIEVEMENTS, SMALL_BOX_TALENT_ID } = ${JSON.stringify(cultivationBindings)};\n`,
 );
 const overrides = await import(`data:text/javascript;base64,${Buffer.from(overridesJavaScript).toString("base64")}`);
 const ages = JSON.parse(await readFile(new URL("public/remake-data/age.json", root), "utf8"));
@@ -62,11 +80,11 @@ test("ships the complete fifty-page virtual-world ending with its prequel", asyn
   assert.equal(ending.entryLabel, "揭开帷幕");
   assert.equal(
     ending.triggerPremise,
-    "第二次人生里，你仍旧像普通人一样长大。大学毕业前，一段感情结束了。你在宿舍躺了几天，最后拖着行李回了老家。",
+    "这一世，你忘记了此前的一切。仙界、异闻和那些无法解释的旧事，都已经离你很远。你只是一个二十多岁、刚刚失恋的大学生，在宿舍躺了几天后，拖着行李回到老家，想安静地住上一阵。",
   );
   assert.equal(
     ending.triggerLead,
-    "你终于下定决心，颤抖着掀开了隐藏帷幕的一角。刹那间，周围的世界如雪花般无声消融。",
+    "你伸手掀开帷幕的一角。下一秒，周围的一切开始无声褪去。",
   );
   assert.equal(new Set(ending.pages.map(({ image }) => image)).size, 50);
   assert.equal(ending.pages[0].image, "/remake-tales/unloaded-hometown/01.webp");
@@ -75,8 +93,9 @@ test("ships the complete fifty-page virtual-world ending with its prequel", asyn
   assert.equal(ending.pages[49].image, "/remake-tales/unloaded-hometown/50.webp");
   assert.equal(ending.pages[49].text, "世界是假的，但爱是真的。");
   assert.ok(ending.pages.slice(0, 25).every(({ text }) => text === ""));
-  assert.deepEqual(ending.sourceEventIds, ["21305", "21306", "21307", "21308"]);
-  for (const eventId of ending.sourceEventIds) assert.ok(events[eventId]);
+  assert.deepEqual(ending.sourceEventIds, ["site-unloaded-hometown-entry"]);
+  assert.equal(ending.requiredTalentId, "site-red-pill");
+  assert.deepEqual(ending.triggerAgeRange, [20, 32]);
   assert.match(events[21305].event, /虚拟世界/);
 
   await Promise.all(ending.pages.map(({ image }) => {
@@ -333,8 +352,9 @@ test("gives ordinary lives two restrained rumors without forcing a special route
   ]);
 });
 
-test("recognizes the original virtual-world defense route only", () => {
-  assert.equal(endings.hasSpecialEndingSource(["21305"]), true);
+test("keeps the original virtual-world defense route separate from the true ending", () => {
+  assert.equal(endings.hasSpecialEndingSource(["site-unloaded-hometown-entry"]), true);
+  assert.equal(endings.hasSpecialEndingSource(["21305", "21307"]), false);
   assert.equal(endings.hasSpecialEndingSource(["10000", "11348"]), false);
 });
 
@@ -345,7 +365,14 @@ test("adds site event windows without mutating upstream entries", () => {
 
   assert.notEqual(changed, original);
   assert.equal(events["21305"].include, "EVT?[21304]");
-  assert.equal(changed.events["21305"].include, 'AGE>=20&AGE<=32&TLT?["site-red-pill"]');
+  assert.deepEqual(changed.events["21305"], events["21305"]);
+  assert.equal(events["10458"].exclude, "EVT?[10458]");
+  assert.match(changed.events["10458"].exclude, /PEVT!\["site-first-cultivation-practice"\]/);
+  assert.match(changed.events["40061"].exclude, /PEVT!\["site-first-cultivation-practice"\]/);
+  assert.equal(changed.events["site-unloaded-hometown-entry"].event, "你开始注意到，周围有些地方似乎没有被完整加载。");
+  assert.equal(changed.events["site-unloaded-hometown-entry"].NoRandom, 1);
+  assert.equal(changed.events["site-unloaded-hometown-entry"].include, 'AGE>=20&AGE<=32&TLT?["site-red-pill"]');
+  assert.equal(changed.events["site-unloaded-hometown-entry"].branch, undefined);
   assert.equal(changed.talents["site-red-pill"].exclusive, 1);
   assert.deepEqual(changed.talents["site-red-pill"].effect, { LIF: 10 });
   assert.equal(changed.talents["site-shambhala-manuscript"].name, "香巴拉世界手稿");
@@ -382,13 +409,19 @@ test("adds site event windows without mutating upstream entries", () => {
   assert.deepEqual(changed.talents["site-eight-foot-woman-sensitivity"].effect, { INT: 3, STR: 2, SPR: -1 });
   assert.equal(changed.events["site-eight-foot-woman-return"].grade, 2);
   assert.equal(changed.events["site-eight-foot-woman-return"].include, 'AGE>=19&AGE<=23&TLT?["site-eight-foot-woman-sensitivity"]');
-  assert.equal(changed.events["site-small-box-immortal-book"].include, "TLT?[1048]");
+  assert.equal(changed.events["site-first-cultivation-opportunity"].include, 'TLT?[1048]&PEVT!["site-first-cultivation-practice"]');
+  assert.deepEqual(changed.events["site-first-cultivation-opportunity"].branch, ["TLT?[1048]:site-first-cultivation-practice"]);
+  assert.match(changed.events["site-first-cultivation-practice"].event, /自己摸索出的吐纳次序/);
+  assert.match(changed.events["site-first-cultivation-ending"].postEvent, /这一世止于练气/);
+  assert.equal(changed.events["site-small-box-immortal-book"].include, 'TLT?[1048]&PEVT?["site-first-cultivation-practice"]');
   assert.deepEqual(changed.events["site-small-box-immortal-book"].branch, ["TLT?[1048]:20461"]);
   assert.ok(cultivation.IMMORTAL_BOOK_EVENT_WEIGHT > 1_000_000_000);
   assert.equal(changed.achievement["site-achievement-first-special"].name, "初识冰山一角");
   assert.equal(changed.achievement["site-achievement-perfect-cultivation"].condition, "EVT?[40050]");
   assert.equal(changed.achievement["site-achievement-true-ending"].name, "真结局");
   assert.equal(cultivation.CULTIVATION_ROUTE_CHAPTERS.length, 14);
+  assert.equal(cultivation.CULTIVATION_SIDE_EVENTS.length, 7);
+  assert.ok(cultivation.CULTIVATION_SIDE_EVENTS.every(({ event }) => !event.branch && Number(event.effect?.SPR ?? 0) > 0));
   assert.equal(changed.events["site-cultivation-01"].include, "TLT?[1048]&EVT?[40001]");
   assert.deepEqual(changed.events["site-cultivation-14"].branch, ["TLT?[1048]:40050"]);
 
@@ -410,18 +443,21 @@ test("adds site event windows without mutating upstream entries", () => {
     const before = Array.isArray(ages[age].event) ? ages[age].event : [ages[age].event];
     const after = Array.isArray(changed.age[age].event) ? changed.age[age].event : [changed.age[age].event];
     const siteIds = new Set([
-      "21305",
+      "site-unloaded-hometown-entry",
       "site-eighties-ghost-file",
       "site-small-box-immortal-book",
+      "site-first-cultivation-opportunity",
+      "site-first-cultivation-ending",
       ...cultivation.CULTIVATION_ROUTE_CHAPTERS.map(({ id }) => id),
+      ...cultivation.CULTIVATION_SIDE_EVENTS.map(({ id }) => id),
     ]);
     const beforeUnrelated = before.filter((value) => !siteIds.has(idOf(value)));
     const afterUnrelated = after.filter((value) => !siteIds.has(idOf(value)));
     assert.deepEqual(afterUnrelated, beforeUnrelated, `unrelated events changed at age ${age}`);
     assert.equal(
-      after.filter((value) => idOf(value) === "21305").length,
-      age >= 20 && age <= 32 ? 1 : 0,
-      `unexpected 21305 entry at age ${age}`,
+      after.filter((value) => idOf(value) === "site-unloaded-hometown-entry").length,
+      0,
+      `site true-ending entry must be scheduled, not random, at age ${age}`,
     );
     assert.equal(
       after.filter((value) => idOf(value) === "site-eighties-ghost-file").length,
@@ -433,11 +469,28 @@ test("adds site event windows without mutating upstream entries", () => {
       age >= 26 && age <= 59 ? 1 : 0,
       `unexpected immortal book entry at age ${age}`,
     );
+    assert.equal(
+      after.filter((value) => idOf(value) === "site-first-cultivation-opportunity").length,
+      age >= 26 && age <= 59 ? 1 : 0,
+      `unexpected first cultivation entry at age ${age}`,
+    );
+    assert.equal(
+      after.filter((value) => idOf(value) === "site-first-cultivation-ending").length,
+      age === 99 ? 1 : 0,
+      `unexpected first cultivation ending at age ${age}`,
+    );
     for (const cultivationChapter of cultivation.CULTIVATION_ROUTE_CHAPTERS) {
       assert.equal(
         after.filter((value) => idOf(value) === cultivationChapter.id).length,
         age >= cultivationChapter.minAge && age <= cultivationChapter.maxAge ? 1 : 0,
         `unexpected ${cultivationChapter.id} entry at age ${age}`,
+      );
+    }
+    for (const side of cultivation.CULTIVATION_SIDE_EVENTS) {
+      assert.equal(
+        after.filter((value) => idOf(value) === side.id).length,
+        age >= side.minAge && age <= side.maxAge ? 1 : 0,
+        `unexpected ${side.id} entry at age ${age}`,
       );
     }
   }
@@ -452,16 +505,21 @@ test("keeps the original cultivation route and makes the small-box book encounte
   assert.equal(cultivation.isCultivationEventId("40050"), true);
   assert.equal(cultivation.isCultivationEventId("40051"), false);
   assert.equal(cultivation.isCultivationEventId("site-cultivation-07"), true);
+  assert.equal(cultivation.isCultivationEventId("site-first-cultivation-practice"), true);
   assert.match(cultivation.IMMORTAL_BOOK_OPPORTUNITY_EVENT.event, /《仙脉图录》/);
   assert.equal(cultivation.IMMORTAL_BOOK_EVENT_WEIGHT, 1e100);
   assert.equal(cultivation.CULTIVATION_CHAPTER_WEIGHT, 1e90);
+  assert.equal(cultivation.CULTIVATION_SIDE_EVENT_WEIGHT, 1e70);
   assert.equal(cultivation.shouldOfferTruthChoice(true, false, false), true);
   assert.equal(cultivation.shouldOfferTruthChoice(false, true, false), true);
   assert.equal(cultivation.shouldOfferTruthChoice(true, true, true), false);
   assert.equal(cultivation.isTruthRun(["1001", "site-red-pill"]), true);
   assert.equal(cultivation.isTruthRun(["1048", "20461"]), false);
   assert.deepEqual(cultivation.RED_PILL_TALENT.exclude.map(String), ["1004", "1024", "1025", "1113"]);
-  assert.deepEqual(endings.scheduledSpecialEvents(["site-red-pill"], () => 0.5)[0], { id: "10001", age: 0 });
+  const truthEvents = endings.scheduledSpecialEvents(["site-red-pill"], () => 0.5);
+  assert.deepEqual(truthEvents[0], { id: "10001", age: 0 });
+  assert.ok(truthEvents.some(({ id, age }) => id === "site-unloaded-hometown-entry" && age === 26));
+  assert.ok(truthEvents.every(({ id }) => id !== "21305" && id !== "21306" && id !== "21307" && id !== "21308"));
   assert.equal(cultivation.TRUE_ENDING_QUOTE, "我再一次站在阳光下，就像我儿时那样，我一无所有，一无所学，一无所知。");
   assert.equal(cultivation.TRUE_ENDING_REFLECTION.length, 2);
   assert.deepEqual(
@@ -472,6 +530,28 @@ test("keeps the original cultivation route and makes the small-box book encounte
     const previousId = index === 0 ? "40001" : cultivation.CULTIVATION_ROUTE_CHAPTERS[index - 1].id;
     assert.ok(entry.event.include.includes(previousId));
   });
+});
+
+test("gates the Moonwhite cultivation route behind a completed first practice life", () => {
+  const data = overrides.applySiteEventOverrides({ age: ages, events, talents: JSON.parse(JSON.stringify({ 1048: { id: "1048", name: "神秘的小盒子", description: "100岁时才能开启", grade: 3 } })) });
+  const allocation = { CHR: 5, INT: 5, STR: 5, MNY: 5 };
+  const firstEngine = engineModule.createRemakeEngine(data, {
+    random: () => 0.5,
+    persistent: { achievedEvents: [] },
+  });
+  const first = firstEngine.start({ talentIds: ["1048"], allocation }).runToEnd(2_000).snapshot;
+  assert.ok(first.eventIds.includes("site-first-cultivation-practice"));
+  assert.equal(first.eventIds.includes("20461"), false);
+  assert.equal(first.eventIds.includes("40001"), false);
+  assert.equal(first.eventIds.includes("40050"), false);
+  assert.ok(first.age <= cultivation.FIRST_CULTIVATION_END_AGE, `first practice life entered a long route: ${JSON.stringify(first.eventIds.filter((id) => /^400/.test(String(id))))}`);
+
+  const secondEngine = engineModule.createRemakeEngine(data, {
+    random: () => 0.5,
+    persistent: { achievedEvents: first.eventIds },
+  });
+  const second = secondEngine.start({ talentIds: ["1048"], allocation }).runToEnd(2_000).snapshot;
+  assert.ok(second.eventIds.includes("20461"));
 });
 
 test("chooses the special event year across the complete 20 through 32 range", () => {

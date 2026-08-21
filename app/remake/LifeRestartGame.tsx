@@ -21,8 +21,10 @@ import {
   type RemakeEffect,
   type RemakeGrade,
   type RemakeId,
+  type RemakeEngine,
   type RemakeSession,
   type RemakeSnapshot,
+  type RemakeStats,
   type RemakeStatKey,
   type RemakeTalentCard,
 } from "../life/remake-engine";
@@ -37,6 +39,7 @@ import {
   PERFECT_CULTIVATION_ACHIEVEMENT_ID,
   PERFECT_CULTIVATION_EVENT_ID,
   RED_PILL_TALENT_ID,
+  SMALL_BOX_TALENT_ID,
   TRUE_ENDING_ATTRIBUTION,
   TRUE_ENDING_ACHIEVEMENT_ID,
   TRUE_ENDING_QUOTE,
@@ -89,6 +92,7 @@ type Panel = "achievements" | "archive" | "tales" | "save";
 
 type MetaProgress = {
   runs: number;
+  totalYears: number;
   maxAge: number;
   inheritedTalentId: RemakeId | null;
   unlockedTalentIds: RemakeId[];
@@ -123,6 +127,7 @@ const STORAGE_KEY = "wm-zj-life-remake:v2";
 const LEGACY_STORAGE_KEY = "wm-zj-life-remake:v1";
 const TALENT_DRAW_COUNT = 30;
 const MAX_TALENT_REFRESHES = 3;
+const RED_TALENT_DRAW_CHANCE = 0.75;
 const REMAKE_DEVTOOLS_ENABLED = process.env.NODE_ENV !== "production";
 const BOOSTED_TALENT_RATES = {
   0: 45,
@@ -144,6 +149,7 @@ const RED_TALENT_WEIGHTS: Partial<Record<RemakeId, number>> = {
   [SAND_SEA_TALENT_ID]: 5,
 };
 const RED_TALENT_IDS = new Set<RemakeId>(Object.keys(RED_TALENT_WEIGHTS));
+const ALL_RED_TALENT_IDS = new Set<RemakeId>([...RED_TALENT_IDS, RED_PILL_TALENT_ID]);
 const MALE_INCOMPATIBLE_TALENT_IDS = new Set<RemakeId>(["1004", "1024", "1025", "1113"]);
 const MALE_REQUIRED_TALENT_IDS = new Set<RemakeId>([
   RED_PILL_TALENT_ID,
@@ -218,6 +224,7 @@ function achievementMeta(achievementId: RemakeId, grade: RemakeGrade) {
 
 const EMPTY_PROGRESS: MetaProgress = {
   runs: 0,
+  totalYears: 0,
   maxAge: 0,
   inheritedTalentId: null,
   unlockedTalentIds: [],
@@ -239,12 +246,66 @@ function createSiteEngine(data: RemakeData, progress: MetaProgress) {
   return createRemakeEngine(data, {
     talentRates: BOOSTED_TALENT_RATES,
     talentWeights: RED_TALENT_WEIGHTS,
+    exclusiveTalentGroups: [[...ALL_RED_TALENT_IDS]],
     persistent: {
       times: progress.runs,
       achievedEvents: progress.unlockedEventIds,
       achievedTalents: progress.unlockedTalentIds,
     },
   });
+}
+
+function chooseLifeRedTalent(
+  data: RemakeData,
+  engine: RemakeEngine,
+  inheritedTalentId: RemakeId | null,
+  random = Math.random,
+) {
+  const inheritedId = inheritedTalentId === null ? null : toId(inheritedTalentId);
+  if (inheritedId && RED_TALENT_IDS.has(inheritedId)) return inheritedId;
+  if (random() >= RED_TALENT_DRAW_CHANCE) return null;
+
+  const candidates = Object.entries(RED_TALENT_WEIGHTS)
+    .map(([id, weight]) => ({ id: toId(id), weight: Math.max(0, numberValue(weight)) }))
+    .filter(({ id, weight }) => (
+      weight > 0
+      && Boolean(data.talents[id])
+      && !numberValue(data.talents[id].exclusive)
+      && (!inheritedId || !engine.findTalentConflict([inheritedId], id))
+    ));
+  const totalWeight = candidates.reduce((total, candidate) => total + candidate.weight, 0);
+  if (totalWeight <= 0) return null;
+
+  let cursor = Math.min(Math.max(random(), 0), 1 - Number.EPSILON) * totalWeight;
+  for (const candidate of candidates) {
+    cursor -= candidate.weight;
+    if (cursor < 0) return candidate.id;
+  }
+  return candidates.at(-1)?.id ?? null;
+}
+
+function drawLifeTalentCards(
+  engine: RemakeEngine,
+  inheritedTalentId: RemakeId | null,
+  lifeRedTalentId: RemakeId | null,
+  maleLocked: boolean,
+) {
+  const inheritedId = inheritedTalentId === null ? null : toId(inheritedTalentId);
+  const visibleInheritedTalentId = maleLocked && inheritedId && RED_TALENT_IDS.has(inheritedId)
+    ? null
+    : inheritedTalentId;
+  const includedTalentIds = mergeUnique(
+    visibleInheritedTalentId === null ? [] : [visibleInheritedTalentId],
+    lifeRedTalentId === null ? [] : [lifeRedTalentId],
+  );
+  const result = engine.drawTalents({
+    count: TALENT_DRAW_COUNT + (maleLocked ? MALE_INCOMPATIBLE_TALENT_IDS.size : 0),
+    includeTalentIds: includedTalentIds,
+    excludeTalentIds: [...RED_TALENT_IDS],
+  });
+  return maleLocked
+    ? result.cards.filter(({ id }) => !MALE_INCOMPATIBLE_TALENT_IDS.has(toId(id))).slice(0, TALENT_DRAW_COUNT)
+    : result.cards;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -275,20 +336,6 @@ function requiresMaleLead(talentIds: readonly RemakeId[]) {
 
 function withoutMaleIncompatibleTalents(talentIds: readonly RemakeId[]) {
   return talentIds.filter((id) => !MALE_INCOMPATIBLE_TALENT_IDS.has(toId(id)));
-}
-
-function availableTruthEventAge(
-  scheduledEvents: readonly { age: number }[],
-  preferredAge = randomUnloadedHometownAge(),
-) {
-  const occupiedAges = new Set(scheduledEvents.map(({ age }) => age));
-  const ageCount = UNLOADED_HOMETOWN_MAX_AGE - UNLOADED_HOMETOWN_MIN_AGE + 1;
-  for (let offset = 0; offset < ageCount; offset += 1) {
-    const age = UNLOADED_HOMETOWN_MIN_AGE
-      + ((preferredAge - UNLOADED_HOMETOWN_MIN_AGE + offset) % ageCount);
-    if (!occupiedAges.has(age)) return age;
-  }
-  return preferredAge;
 }
 
 function findSpecialEndingStory(id: string | null) {
@@ -355,6 +402,27 @@ function scoreFromSnapshot(run: RemakeSnapshot) {
     (run.highest.CHR + run.highest.INT + run.highest.STR + run.highest.MNY + run.highest.SPR) * 2
       + run.highest.AGE / 2,
   );
+}
+
+function completedLifeYears(run: RemakeSnapshot) {
+  return Math.max(0, Math.trunc(Math.max(run.age, run.highest.AGE)));
+}
+
+function perfectEndingPreviewSnapshot(): RemakeSnapshot {
+  const stats: RemakeStats = { CHR: 18, INT: 2600, STR: 4200, MNY: 16, SPR: 24, LIF: 0 };
+  return {
+    version: 1,
+    age: 500,
+    stats,
+    talentIds: [SMALL_BOX_TALENT_ID],
+    eventIds: [PERFECT_CULTIVATION_EVENT_ID],
+    triggerCounts: {},
+    highest: { AGE: 500, CHR: 18, INT: 2600, STR: 4200, MNY: 16, SPR: 24 },
+    lowest: { AGE: -1, CHR: 10, INT: 10, STR: 10, MNY: 10, SPR: 5 },
+    ended: true,
+    initialContent: [],
+    history: [],
+  };
 }
 
 function timelineFromSnapshot(run: RemakeSnapshot, visibleClueIds: ReadonlySet<string>): TimelineItem[] {
@@ -502,6 +570,7 @@ function normalizeProgress(value: unknown, data: RemakeData): MetaProgress {
   const perfectEndingReached = achievementIds.includes(PERFECT_CULTIVATION_ACHIEVEMENT_ID);
   return {
     runs: Math.max(0, Math.trunc(numberValue(value.runs))),
+    totalYears: Math.max(0, Math.trunc(numberValue(value.totalYears))),
     maxAge: Math.max(0, numberValue(value.maxAge)),
     inheritedTalentId: inherited && talents.has(inherited) ? inherited : null,
     unlockedTalentIds: normalizeIdArray(value.unlockedTalentIds, talents),
@@ -649,7 +718,7 @@ export default function LifeRestartGame() {
   const [encounterWasCollected, setEncounterWasCollected] = useState(false);
   const [pendingSpecialEndingId, setPendingSpecialEndingId] = useState<string | null>(null);
   const [debugTalentIds, setDebugTalentIds] = useState<RemakeId[]>([]);
-  const [debugEventId, setDebugEventId] = useState<RemakeId>("21305");
+  const [debugEventId, setDebugEventId] = useState<RemakeId | null>(null);
   const [debugTalentQuery, setDebugTalentQuery] = useState("");
   const [debugEventQuery, setDebugEventQuery] = useState("");
   const sessionRef = useRef<RemakeSession | null>(null);
@@ -729,7 +798,7 @@ export default function LifeRestartGame() {
     [data, debugEventId],
   );
   const debugSpecialEnding = useMemo(
-    () => findSpecialEndingBySource([debugEventId]),
+    () => debugEventId ? findSpecialEndingBySource([debugEventId]) : null,
     [debugEventId],
   );
   const debugRequiresMaleLead = debugEventId === UNLOADED_HOMETOWN_EVENT_ID
@@ -740,7 +809,9 @@ export default function LifeRestartGame() {
       : debugTalents,
     [debugRequiresMaleLead, debugTalents],
   );
-  const debugEventAgeLabel = debugEventId === UNLOADED_HOMETOWN_EVENT_ID
+  const debugEventAgeLabel = !debugEventId
+    ? "不强制事件"
+    : debugEventId === UNLOADED_HOMETOWN_EVENT_ID
     ? `${UNLOADED_HOMETOWN_MIN_AGE}—${UNLOADED_HOMETOWN_MAX_AGE} 岁随机事件`
     : debugSpecialEnding?.triggerAge !== undefined
     ? `${debugSpecialEnding.triggerAge} 岁必触发事件`
@@ -766,14 +837,24 @@ export default function LifeRestartGame() {
           const restoredDraw = restored.drawIds
             .map((id) => restoredEngine.getTalent(id))
             .filter((talent): talent is RemakeTalentCard => Boolean(talent));
+          const restoredRedTalentIds = restoredDraw
+            .filter(({ id }) => RED_TALENT_IDS.has(toId(id)))
+            .map(({ id }) => toId(id));
           const shouldRefreshLegacyDraw = restored.stage === "talents"
-            && restoredDraw.length !== TALENT_DRAW_COUNT;
+            && (restoredDraw.length !== TALENT_DRAW_COUNT || restoredRedTalentIds.length > 1);
           setStage(restored.stage);
           setDraw(shouldRefreshLegacyDraw
-            ? restoredEngine.drawTalents({
-              count: TALENT_DRAW_COUNT,
-              includeTalentId: restored.progress.inheritedTalentId,
-            }).cards
+            ? drawLifeTalentCards(
+              restoredEngine,
+              restored.progress.inheritedTalentId,
+              restoredRedTalentIds[0] ?? (
+                restored.progress.inheritedTalentId !== null
+                && RED_TALENT_IDS.has(toId(restored.progress.inheritedTalentId))
+                  ? toId(restored.progress.inheritedTalentId)
+                  : null
+              ),
+              restored.progress.truthRunArmed,
+            )
             : restoredDraw);
           setTalentRefreshesUsed(shouldRefreshLegacyDraw ? 0 : restored.talentRefreshesUsed);
           setSelectedTalentIds(shouldRefreshLegacyDraw ? [] : restored.selectedTalentIds);
@@ -804,6 +885,19 @@ export default function LifeRestartGame() {
     if (!hydrated || !data || previewHandledRef.current) return;
     previewHandledRef.current = true;
     const preview = new URLSearchParams(window.location.search).get("preview");
+    if (devtoolsEnabled && preview === "perfect-ending") {
+      standalonePreviewRef.current = true;
+      const timer = window.setTimeout(() => {
+        setMessage("");
+        setRun((current) => ({
+          ...(current ?? perfectEndingPreviewSnapshot()),
+          ended: true,
+          eventIds: mergeUnique(current?.eventIds ?? [], [PERFECT_CULTIVATION_EVENT_ID]),
+        }));
+        setStage("summary");
+      }, 0);
+      return () => window.clearTimeout(timer);
+    }
     if (devtoolsEnabled && (preview === "pill-choice" || preview === "true-ending")) {
       standalonePreviewRef.current = true;
       const timer = window.setTimeout(() => {
@@ -951,6 +1045,7 @@ export default function LifeRestartGame() {
       setProgress((current) => progressAfter({
         ...current,
         runs: current.runs + 1,
+        totalYears: current.totalYears + completedLifeYears(run),
         inheritedTalentId: null,
         specialEndingIds: mergeUnique(current.specialEndingIds, [ending.id]),
       }, run, data, ["END"]));
@@ -975,6 +1070,7 @@ export default function LifeRestartGame() {
         const recorded = progressAfter({
           ...current,
           runs: current.runs + 1,
+          totalYears: current.totalYears + completedLifeYears(run),
           inheritedTalentId: null,
           truthChoiceAvailable: false,
           truthRunArmed: false,
@@ -1097,21 +1193,22 @@ export default function LifeRestartGame() {
     };
   }, [panel]);
 
-  const drawClassicTalentCards = () => {
+  const drawClassicTalentCards = (lifeRedTalentId: RemakeId | null) => {
     if (!engine) return [];
-    const maleLocked = progress.truthRunArmed;
-    const result = engine.drawTalents({
-      count: TALENT_DRAW_COUNT + (maleLocked ? MALE_INCOMPATIBLE_TALENT_IDS.size : 0),
-      includeTalentId: progress.inheritedTalentId,
-    });
-    return maleLocked
-      ? result.cards.filter(({ id }) => !MALE_INCOMPATIBLE_TALENT_IDS.has(toId(id))).slice(0, TALENT_DRAW_COUNT)
-      : result.cards;
+    return drawLifeTalentCards(
+      engine,
+      progress.inheritedTalentId,
+      lifeRedTalentId,
+      progress.truthRunArmed,
+    );
   };
 
   const beginClassic = () => {
-    if (!engine) return;
-    const cards = drawClassicTalentCards();
+    if (!engine || !data) return;
+    const lifeRedTalentId = progress.truthRunArmed
+      ? null
+      : chooseLifeRedTalent(data, engine, progress.inheritedTalentId);
+    const cards = drawClassicTalentCards(lifeRedTalentId);
     setDraw(cards);
     setTalentRefreshesUsed(0);
     setSelectedTalentIds([]);
@@ -1129,10 +1226,10 @@ export default function LifeRestartGame() {
     if (!devtoolsEnabled || !data) return;
     setAutoPlay(false);
     setDebugTalentIds([]);
-    setDebugEventId("21305");
+    setDebugEventId(null);
     setDebugTalentQuery("");
     setDebugEventQuery("");
-    setMessage("调试开局不会改变普通模式的抽卡规则。选择天赋和一个强制事件后即可开始。");
+    setMessage("调试开局不会改变普通模式的抽卡规则。可以只测试天赋，也可以另外指定一个强制事件。");
     setStage("debug");
   };
 
@@ -1151,7 +1248,7 @@ export default function LifeRestartGame() {
   };
 
   const startDebugRun = () => {
-    if (!devtoolsEnabled || !data || !debugEventId) return;
+    if (!devtoolsEnabled || !data) return;
     try {
       const nextEngine = createSiteEngine(data, progress);
       const requiredTalentId = debugEventId === UNLOADED_HOMETOWN_EVENT_ID
@@ -1166,7 +1263,9 @@ export default function LifeRestartGame() {
             )),
           ]
         : debugTalentIds;
-      const targetAge = debugEventId === UNLOADED_HOMETOWN_EVENT_ID
+      const targetAge = !debugEventId
+        ? null
+        : debugEventId === UNLOADED_HOMETOWN_EVENT_ID
         ? randomUnloadedHometownAge()
         : debugSpecialEnding
         ? specialEndingTriggerAge(debugSpecialEnding)
@@ -1174,7 +1273,7 @@ export default function LifeRestartGame() {
       const scheduled = scheduledSpecialEvents(debugRunTalentIds);
       const forcedEvents = [
         ...scheduled,
-        { id: debugEventId, age: targetAge },
+        ...(debugEventId && targetAge !== null ? [{ id: debugEventId, age: targetAge }] : []),
       ]
         .filter((entry, index, entries) => entries.findIndex(({ id }) => id === entry.id) === index)
         .sort((left, right) => left.age - right.age);
@@ -1192,7 +1291,9 @@ export default function LifeRestartGame() {
       setPendingSpecialEndingId(null);
       setAutoPlay(false);
       setProgress((current) => progressAfter(current, snapshot, data, ["START"]));
-      setMessage(`调试人生已从 0 岁开始，并装载 ${debugRunTalentIds.length} 个天赋；事件 ${debugEventId} 已预约在 ${targetAge} 岁。`);
+      setMessage(debugEventId && targetAge !== null
+        ? `调试人生已从 0 岁开始，并装载 ${debugRunTalentIds.length} 个天赋；事件 ${debugEventId} 已预约在 ${targetAge} 岁。`
+        : `调试人生已从 0 岁开始，并装载 ${debugRunTalentIds.length} 个天赋；没有强制指定特殊事件。`);
       setStage("running");
     } catch (error) {
       setMessage(error instanceof Error ? `调试开局失败：${error.message}` : "调试开局失败，请重新选择。");
@@ -1202,7 +1303,8 @@ export default function LifeRestartGame() {
   const refreshTalents = () => {
     if (!engine || talentRefreshesUsed >= MAX_TALENT_REFRESHES) return;
     const nextUsed = talentRefreshesUsed + 1;
-    setDraw(drawClassicTalentCards());
+    const lifeRedTalentId = draw.find(({ id }) => RED_TALENT_IDS.has(toId(id)))?.id ?? null;
+    setDraw(drawClassicTalentCards(lifeRedTalentId));
     setSelectedTalentIds([]);
     setPreparedTalentIds([]);
     setTalentRefreshesUsed(nextUsed);
@@ -1285,16 +1387,12 @@ export default function LifeRestartGame() {
         ? withoutMaleIncompatibleTalents(talentIds)
         : [...talentIds];
       const runTalentIds = truthRun
-        ? mergeUnique(compatibleTalentIds, [RED_PILL_TALENT_ID])
+        ? mergeUnique(
+          compatibleTalentIds.filter((id) => !RED_TALENT_IDS.has(toId(id))),
+          [RED_PILL_TALENT_ID],
+        )
         : compatibleTalentIds;
       const scheduledEvents = scheduledSpecialEvents(runTalentIds);
-      if (truthRun) {
-        scheduledEvents.push({
-          id: UNLOADED_HOMETOWN_EVENT_ID,
-          age: availableTruthEventAge(scheduledEvents),
-        });
-        scheduledEvents.sort((left, right) => left.age - right.age);
-      }
       const session = nextEngine.start({
         talentIds: runTalentIds,
         allocation: initialAllocation,
@@ -1376,6 +1474,7 @@ export default function LifeRestartGame() {
       const advanced = {
         ...current,
         runs: current.runs + 1,
+        totalYears: current.totalYears + completedLifeYears(run),
         inheritedTalentId: talentId,
         truthChoiceAvailable: offerTruthChoice,
         truthRunArmed: false,
@@ -1525,6 +1624,10 @@ export default function LifeRestartGame() {
           <p>1719 条原版中文经历</p>
           <h1 id="life-home-title">要不要，再写一次人生？</h1>
           <span>从三十张增强天赋池里选三张，分配最初的二十点，然后看看这一页会走到哪里。</span>
+          <p className={styles.reincarnationHint}>
+            每次重来，都会留下些东西。有些内容，要多走几段人生才会出现。
+            <span>下一次轮回里，藏着的东西也许比你想象得更多。等零散的痕迹彼此对上，你看到的，或许会是这个世界原本的样子。</span>
+          </p>
           <div className={styles.primaryActions}>
             {progress.truthChoiceAvailable && !trueEndingReached && (
               <button className={styles.truthButton} type="button" onClick={() => setStage("pill-choice")}>
@@ -1547,7 +1650,7 @@ export default function LifeRestartGame() {
       {stage === "pill-choice" && (
         <section className={styles.pillChoiceCard} aria-labelledby="pill-choice-title">
           <div className={styles.pillChoiceCopy}>
-            <p>飞升以后 · 第二次重开</p>
+            <p>飞升以后 · 盒底之物</p>
             <h1 id="pill-choice-title">盒底留下的选择</h1>
             <span>
               修行的最后，小盒子底部曾有一个圆形空位。现在，两枚药丸安静地躺在那里。
@@ -1660,7 +1763,7 @@ export default function LifeRestartGame() {
             aside={`${debugTalentIds.length} 个天赋 · ${debugEventAgeLabel}`}
           />
           <p className={styles.debugWarning}>
-            仅在本地开发环境显示。人生会从 0 岁按正常事件逐年开始，所选事件只会在它原本所属的年龄保证触发。
+            仅在本地开发环境显示。人生会从 0 岁按正常事件逐年开始；不选事件时只测试天赋，主动选择的事件才会保证触发。
           </p>
 
           <div className={styles.debugToolbar}>
@@ -1717,6 +1820,17 @@ export default function LifeRestartGame() {
             <small>选中事件会保留自然发生年龄，并绕过前置条件与随机概率；分支和属性效果仍按原版执行。</small>
           </div>
           <div className={styles.debugEventList} role="radiogroup" aria-label="强制触发事件">
+            <button
+              type="button"
+              role="radio"
+              aria-checked={debugEventId === null}
+              data-selected={debugEventId === null}
+              onClick={() => setDebugEventId(null)}
+            >
+              <span>—</span>
+              <strong>不强制特殊事件</strong>
+              <i>仅测试所选天赋</i>
+            </button>
             {debugEvents.map(([id, event]) => {
               const specialEnding = findSpecialEndingBySource([id]);
               return (
@@ -1738,8 +1852,8 @@ export default function LifeRestartGame() {
 
           <div className={styles.stepActions}>
             <BackButton onClick={() => setStage("home")} />
-            <button className={styles.primaryButton} disabled={!debugEventId} type="button" onClick={startDebugRun}>
-              以调试配置开始
+            <button className={styles.primaryButton} type="button" onClick={startDebugRun}>
+              {debugEventId ? "以调试配置开始" : "仅以所选天赋开始"}
             </button>
           </div>
         </section>
@@ -1750,8 +1864,8 @@ export default function LifeRestartGame() {
           <StepHeading step="02" title="从三十张天赋里带走三张" id="talent-title" aside={`已选 ${selectedTalentIds.length} / 3`} />
           <div className={styles.talentDrawBar}>
             <div>
-              <strong>珍稀概率已提升</strong>
-              <small>普通 45% · 稀有 30% · 史诗 18% · 传说 7% · 红色天赋单卡权重 ×4</small>
+              <strong>红色天赋规则</strong>
+              <small>每段人生最多出现 1 种红色天赋 · 常规开局出现概率 75%</small>
             </div>
             <button
               className={styles.refreshButton}
@@ -1781,7 +1895,7 @@ export default function LifeRestartGame() {
                   aria-pressed={selected}
                   onClick={() => toggleTalent(talent)}
                 >
-                  <span>{appearance.label}{boostedRed ? " · 概率提升" : ""}{inherited ? " · 上一世" : ""}</span>
+                  <span>{appearance.label}{boostedRed ? " · 本世唯一" : ""}{inherited ? " · 上一世" : ""}</span>
                   <strong>{talent.name}</strong>
                   <small>{talent.description}</small>
                 </button>
@@ -1962,11 +2076,19 @@ export default function LifeRestartGame() {
         >
           <p>{perfectEndingReached ? "月白仙章 · 完美结局" : "这一页写完了"}</p>
           <h1 id="summary-title">{perfectEndingReached ? "山河无恙，故人仍在" : `终年 ${run.age} 岁`}</h1>
-          <span>
-            {perfectEndingReached
-              ? "小盒子已经消失。盒底最后留下的圆形空位，仍不知道原本应当放入什么。"
-              : "本局经历、分支与结局均由原版中文事件库实际运行得出。"}
-          </span>
+          {perfectEndingReached ? (
+            <div className={styles.perfectCelebration}>
+              <span className={styles.perfectMoon} aria-hidden="true"><i /></span>
+              <strong>游戏已达成 · 完美结局</strong>
+              <p>
+                恭喜你历经 <b>{progress.runs + 1}</b> 世轮回、共 <b>{progress.totalYears + completedLifeYears(run)}</b> 年，
+                终于走完月白仙章。
+              </p>
+              <small>那个祖传的小盒子已经消失。奇怪的是，盒底最后留下的圆形空位，仍不知道原本应当放入什么……</small>
+            </div>
+          ) : (
+            <span>本局经历、分支与结局均由原版中文事件库实际运行得出。</span>
+          )}
           <div className={styles.summaryScore}>
             <strong>{scoreFromSnapshot(run)}</strong>
             <small>人生总评</small>

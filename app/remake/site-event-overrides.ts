@@ -7,6 +7,15 @@ import type {
 import {
   CULTIVATION_CHAPTER_WEIGHT,
   CULTIVATION_ROUTE_CHAPTERS,
+  CULTIVATION_SIDE_EVENTS,
+  CULTIVATION_SIDE_EVENT_WEIGHT,
+  FIRST_CULTIVATION_EVENT,
+  FIRST_CULTIVATION_END_AGE,
+  FIRST_CULTIVATION_END_EVENT,
+  FIRST_CULTIVATION_END_EVENT_ID,
+  FIRST_CULTIVATION_EVENT_ID,
+  FIRST_CULTIVATION_OPPORTUNITY_EVENT,
+  FIRST_CULTIVATION_OPPORTUNITY_EVENT_ID,
   IMMORTAL_BOOK_EVENT_WEIGHT,
   IMMORTAL_BOOK_MAX_AGE,
   IMMORTAL_BOOK_MIN_AGE,
@@ -15,12 +24,12 @@ import {
   RED_PILL_TALENT,
   RED_PILL_TALENT_ID,
   SITE_ACHIEVEMENTS,
+  SMALL_BOX_TALENT_ID,
 } from "./cultivation-route";
 
-export const UNLOADED_HOMETOWN_EVENT_ID = "21305";
+export const UNLOADED_HOMETOWN_EVENT_ID = "site-unloaded-hometown-entry";
 export const UNLOADED_HOMETOWN_MIN_AGE = 20;
 export const UNLOADED_HOMETOWN_MAX_AGE = 32;
-export const UNLOADED_HOMETOWN_EVENT_WEIGHT = 0.2;
 export const SHAMBHALA_TALENT_ID = "site-shambhala-manuscript";
 export const SHAMBHALA_EVENT_ID = "site-shambhala-entry";
 export const SHAMBHALA_EVENT_AGE = 20;
@@ -58,6 +67,15 @@ export const EIGHT_FOOT_WOMAN_EVENT_ID = "site-eight-foot-woman-return";
 export const EIGHT_FOOT_WOMAN_MIN_AGE = 19;
 export const EIGHT_FOOT_WOMAN_MAX_AGE = 23;
 export const MALE_BIRTH_EVENT_ID = "10001";
+
+const UNLOADED_HOMETOWN_EVENT: RemakeEventRecord = {
+  id: UNLOADED_HOMETOWN_EVENT_ID,
+  event: "你开始注意到，周围有些地方似乎没有被完整加载。",
+  grade: 3,
+  NoRandom: 1,
+  include: `AGE>=${UNLOADED_HOMETOWN_MIN_AGE}&AGE<=${UNLOADED_HOMETOWN_MAX_AGE}&TLT?["${RED_PILL_TALENT_ID}"]`,
+  exclude: `EVT?["${UNLOADED_HOMETOWN_EVENT_ID}"]`,
+};
 
 export const SPECIAL_PROLOGUE_EVENT_IDS = {
   shambhala: ["site-prologue-shambhala-family", "site-prologue-shambhala-study"],
@@ -416,23 +434,13 @@ function eventValues(record: RemakeAgeRecord) {
   return Array.isArray(record.event) ? record.event : [record.event];
 }
 
-/**
- * Keeps the upstream data package untouched while moving our standalone
- * virtual-world ending into a younger, deliberately rare age window.
- */
+/** Keeps the upstream package untouched while layering site-only events on top. */
 export function applySiteEventOverrides(data: RemakeData): RemakeData {
   const age = { ...data.age };
 
   for (const [ageKey, record] of Object.entries(data.age)) {
     const currentAge = Math.trunc(Number(record.age ?? ageKey));
-    const withoutOldEntry = eventValues(record).filter(
-      (value) => eventId(value) !== UNLOADED_HOMETOWN_EVENT_ID,
-    );
-    const withUnloadedHometown = currentAge >= UNLOADED_HOMETOWN_MIN_AGE
-      && currentAge <= UNLOADED_HOMETOWN_MAX_AGE
-      ? [...withoutOldEntry, `${UNLOADED_HOMETOWN_EVENT_ID}*${UNLOADED_HOMETOWN_EVENT_WEIGHT}`]
-      : withoutOldEntry;
-    const withoutGhostDuplicate = withUnloadedHometown.filter(
+    const withoutGhostDuplicate = eventValues(record).filter(
       (value) => eventId(value) !== EIGHTIES_GHOST_EVENT_ID,
     );
     const withEightiesGhost = currentAge >= EIGHTIES_GHOST_MIN_AGE
@@ -440,10 +448,17 @@ export function applySiteEventOverrides(data: RemakeData): RemakeData {
       ? [...withoutGhostDuplicate, `${EIGHTIES_GHOST_EVENT_ID}*${EIGHTIES_GHOST_EVENT_WEIGHT}`]
       : withoutGhostDuplicate;
     const withoutBookDuplicate = withEightiesGhost.filter(
-      (value) => eventId(value) !== IMMORTAL_BOOK_OPPORTUNITY_EVENT_ID,
+      (value) => ![
+        IMMORTAL_BOOK_OPPORTUNITY_EVENT_ID,
+        FIRST_CULTIVATION_OPPORTUNITY_EVENT_ID,
+      ].includes(eventId(value)),
     );
     let event = currentAge >= IMMORTAL_BOOK_MIN_AGE && currentAge <= IMMORTAL_BOOK_MAX_AGE
-      ? [...withoutBookDuplicate, `${IMMORTAL_BOOK_OPPORTUNITY_EVENT_ID}*${IMMORTAL_BOOK_EVENT_WEIGHT}`]
+      ? [
+        ...withoutBookDuplicate,
+        `${FIRST_CULTIVATION_OPPORTUNITY_EVENT_ID}*${IMMORTAL_BOOK_EVENT_WEIGHT}`,
+        `${IMMORTAL_BOOK_OPPORTUNITY_EVENT_ID}*${IMMORTAL_BOOK_EVENT_WEIGHT}`,
+      ]
       : withoutBookDuplicate;
 
     for (const cultivationChapter of CULTIVATION_ROUTE_CHAPTERS) {
@@ -451,6 +466,18 @@ export function applySiteEventOverrides(data: RemakeData): RemakeData {
       if (currentAge >= cultivationChapter.minAge && currentAge <= cultivationChapter.maxAge) {
         event.push(`${cultivationChapter.id}*${CULTIVATION_CHAPTER_WEIGHT}`);
       }
+    }
+
+    for (const side of CULTIVATION_SIDE_EVENTS) {
+      event = event.filter((value) => eventId(value) !== side.id);
+      if (currentAge >= side.minAge && currentAge <= side.maxAge) {
+        event.push(`${side.id}*${CULTIVATION_SIDE_EVENT_WEIGHT}`);
+      }
+    }
+
+    event = event.filter((value) => eventId(value) !== FIRST_CULTIVATION_END_EVENT_ID);
+    if (currentAge === FIRST_CULTIVATION_END_AGE) {
+      event.push(`${FIRST_CULTIVATION_END_EVENT_ID}*${IMMORTAL_BOOK_EVENT_WEIGHT}`);
     }
 
     if (
@@ -461,14 +488,17 @@ export function applySiteEventOverrides(data: RemakeData): RemakeData {
     }
   }
 
-  const originalEvent = data.events[UNLOADED_HOMETOWN_EVENT_ID];
   const events: Record<string, RemakeEventRecord> = {
     ...data.events,
-    [UNLOADED_HOMETOWN_EVENT_ID]: {
-      ...originalEvent,
-      include: `AGE>=${UNLOADED_HOMETOWN_MIN_AGE}&AGE<=${UNLOADED_HOMETOWN_MAX_AGE}&TLT?["${RED_PILL_TALENT_ID}"]`,
-      exclude: `EVT?[${UNLOADED_HOMETOWN_EVENT_ID}]`,
+    10458: {
+      ...data.events["10458"],
+      exclude: `(EVT?[10458])|(TLT?[${SMALL_BOX_TALENT_ID}]&PEVT!["${FIRST_CULTIVATION_EVENT_ID}"])`,
     },
+    40061: {
+      ...data.events["40061"],
+      exclude: `((AEVT?[40061])|(EVT?[40001]))|(TLT?[${SMALL_BOX_TALENT_ID}]&PEVT!["${FIRST_CULTIVATION_EVENT_ID}"])`,
+    },
+    [UNLOADED_HOMETOWN_EVENT_ID]: UNLOADED_HOMETOWN_EVENT,
     [SHAMBHALA_EVENT_ID]: SHAMBHALA_EVENT,
     [EIGHTIES_GHOST_EVENT_ID]: EIGHTIES_GHOST_EVENT,
     [GONGGONG_ZHURONG_EVENT_ID]: GONGGONG_ZHURONG_EVENT,
@@ -479,11 +509,15 @@ export function applySiteEventOverrides(data: RemakeData): RemakeData {
     [SAND_SEA_EVENT_ID]: SAND_SEA_EVENT,
     [EIGHT_FOOT_WOMAN_EVENT_ID]: EIGHT_FOOT_WOMAN_EVENT,
     [IMMORTAL_BOOK_OPPORTUNITY_EVENT_ID]: IMMORTAL_BOOK_OPPORTUNITY_EVENT,
+    [FIRST_CULTIVATION_OPPORTUNITY_EVENT_ID]: FIRST_CULTIVATION_OPPORTUNITY_EVENT,
+    [FIRST_CULTIVATION_EVENT_ID]: FIRST_CULTIVATION_EVENT,
+    [FIRST_CULTIVATION_END_EVENT_ID]: FIRST_CULTIVATION_END_EVENT,
   };
 
   for (const cultivationChapter of CULTIVATION_ROUTE_CHAPTERS) {
     events[cultivationChapter.id] = cultivationChapter.event;
   }
+  for (const side of CULTIVATION_SIDE_EVENTS) events[side.id] = side.event;
 
   for (const event of [...SPECIAL_PROLOGUE_EVENTS, ...SPECIAL_RUMOR_EVENTS]) {
     events[String(event.id)] = event;

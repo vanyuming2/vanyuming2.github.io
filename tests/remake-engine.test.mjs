@@ -111,6 +111,38 @@ test("draws thirty unique talents with the site's boosted rarity rates", () => {
   assert.deepEqual(draw.gradeProbabilities, { 0: 0.45, 1: 0.3, 2: 0.18, 3: 0.07 });
 });
 
+test("can reserve one featured talent while excluding every other talent in its group", () => {
+  const data = {
+    age: {},
+    events: {},
+    talents: {
+      redA: { id: "redA", name: "红卡甲", description: "甲", grade: 3 },
+      redB: { id: "redB", name: "红卡乙", description: "乙", grade: 3 },
+      normal: { id: "normal", name: "普通卡", description: "普通", grade: 0 },
+      swap: {
+        id: "swap",
+        name: "替换卡",
+        description: "可能替换",
+        grade: 0,
+        replacement: { talent: ["redB"] },
+      },
+    },
+  };
+  const engine = engineModule.createRemakeEngine(data, {
+    random: () => 0,
+    exclusiveTalentGroups: [["redA", "redB"]],
+  });
+  const draw = engine.drawTalents({
+    count: 3,
+    includeTalentIds: ["redA"],
+    excludeTalentIds: ["redA", "redB"],
+  });
+
+  assert.deepEqual(draw.cards.map(({ id }) => id), ["redA", "normal", "swap"]);
+  assert.equal(engine.findTalentConflict(["redA"], "redB"), "redA");
+  assert.deepEqual(engine.prepareTalents(["redA", "swap"]).talentIds, ["redA", "swap"]);
+});
+
 test("applies per-talent draw weights to featured cards", () => {
   const data = {
     age: {},

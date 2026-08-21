@@ -151,9 +151,9 @@ blockquote {
 
 .nightHeader,
 .starHero,
+.privateArchive,
 .nightBody,
-.lettersSection,
-.footer {
+.lettersSection {
   position: relative;
   z-index: 1;
 }
@@ -161,26 +161,9 @@ blockquote {
 .nightHeader {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   min-height: 82px;
   border-bottom: 1px solid var(--line);
-}
-
-.names {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  color: rgba(243, 241, 235, 0.9);
-  font-size: 0.88rem;
-  font-weight: 520;
-  letter-spacing: 0.025em;
-}
-
-.names span {
-  margin-inline: 9px;
-  color: var(--faint);
-  font-size: 0.67rem;
-  font-weight: 400;
 }
 
 .nightHeader > time {
@@ -381,6 +364,182 @@ blockquote {
   background: rgba(244, 201, 93, 0.35);
   content: "";
   transform: translateX(-50%);
+}
+
+.privateArchive {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.privateArchiveCover {
+  position: relative;
+  display: grid;
+  min-height: 250px;
+  margin: 72px 0;
+  padding: 42px 46px 38px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 86% 18%, rgba(244, 201, 93, 0.045), transparent 27%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.027), rgba(255, 255, 255, 0.009)),
+    #181715;
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  list-style: none;
+  transition: border-color 220ms ease, background 220ms ease;
+}
+
+.privateArchiveCover::-webkit-details-marker {
+  display: none;
+}
+
+.privateArchiveCover::after {
+  position: absolute;
+  top: 31px;
+  right: 34px;
+  width: 7px;
+  height: 7px;
+  border: 1px solid rgba(244, 201, 93, 0.3);
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(244, 201, 93, 0.13);
+  content: "";
+}
+
+.privateArchiveTag {
+  align-self: start;
+  color: rgba(220, 213, 201, 0.46);
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+}
+
+.privateArchiveBars {
+  display: grid;
+  align-self: center;
+  gap: 10px;
+  width: min(540px, 86%);
+  margin-block: 24px 27px;
+}
+
+.privateArchiveBars i {
+  display: block;
+  width: 100%;
+  height: 13px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #090908, #11110f 58%, #080807);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.018), 0 4px 12px rgba(0, 0, 0, 0.2);
+  opacity: 0.94;
+  transform: rotate(-0.18deg);
+}
+
+.privateArchiveBars i:nth-child(1) {
+  width: 63%;
+}
+
+.privateArchiveBars i:nth-child(2) {
+  width: 91%;
+  transform: rotate(0.12deg);
+}
+
+.privateArchiveBars i:nth-child(3) {
+  width: 74%;
+}
+
+.privateArchiveBars i:nth-child(4) {
+  width: 46%;
+  transform: rotate(0.2deg);
+}
+
+.privateArchiveAction {
+  align-self: end;
+  color: var(--faint);
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+}
+
+.privateArchiveOpen {
+  display: none;
+}
+
+.privateArchive[open] > .privateArchiveCover {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 0;
+  margin: 20px 0 0;
+  padding: 15px 19px;
+  border-color: rgba(255, 255, 255, 0.045);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.014);
+  box-shadow: none;
+}
+
+.privateArchive[open] > .privateArchiveCover::after,
+.privateArchive[open] .privateArchiveBars,
+.privateArchive[open] .privateArchiveClosed {
+  display: none;
+}
+
+.privateArchive[open] .privateArchiveOpen {
+  display: inline;
+}
+
+.privateArchive[open] .privateArchiveContent {
+  animation: archiveReveal 300ms ease-out both;
+}
+
+.privateArchiveNotice {
+  display: grid;
+  min-height: 180px;
+  margin: 30px 0 72px;
+  place-items: center;
+  border: 1px dashed rgba(235, 226, 211, 0.085);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.012);
+  text-align: center;
+}
+
+.privateArchiveNotice p {
+  position: relative;
+  margin: 0;
+  padding-top: 22px;
+  color: rgba(214, 209, 200, 0.55);
+  font-size: 0.73rem;
+  line-height: 1.8;
+}
+
+.privateArchiveNotice p::before {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 24px;
+  height: 1px;
+  background: rgba(244, 201, 93, 0.24);
+  content: "";
+  transform: translateX(-50%);
+}
+
+.privateArchive[open] .nightBody {
+  border-top: 0;
+}
+
+.privateArchive .lettersSection {
+  border-bottom: 0;
+}
+
+.privateArchiveCover:focus-visible {
+  outline: 2px solid rgba(244, 201, 93, 0.48);
+  outline-offset: 4px;
+}
+
+@media (hover: hover) {
+  .privateArchive:not([open]) > .privateArchiveCover:hover {
+    border-color: rgba(244, 201, 93, 0.13);
+    background:
+      radial-gradient(circle at 86% 18%, rgba(244, 201, 93, 0.065), transparent 27%),
+      linear-gradient(145deg, rgba(255, 255, 255, 0.032), rgba(255, 255, 255, 0.01)),
+      #181715;
+  }
 }
 
 .nightBody {
@@ -759,27 +918,6 @@ blockquote {
   text-align: right;
 }
 
-.footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 86px;
-  color: var(--faint);
-  font-size: 0.64rem;
-  letter-spacing: 0.04em;
-}
-
-.footer p {
-  margin: 0;
-}
-
-.footer p::before {
-  margin-right: 8px;
-  color: rgba(244, 201, 93, 0.55);
-  content: "✦";
-}
-
-.names:focus-visible,
 .envelopeItem summary:focus-visible {
   border-radius: 4px;
   outline: 2px solid rgba(244, 201, 93, 0.52);
@@ -1463,6 +1601,17 @@ blockquote {
   }
 }
 
+@keyframes archiveReveal {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes starDrift {
   0%,
   100% {
@@ -1579,6 +1728,30 @@ blockquote {
 
   .starHero h1 {
     font-size: 1.65rem;
+  }
+
+  .privateArchiveCover {
+    min-height: 220px;
+    margin-block: 54px;
+    padding: 34px 29px 31px;
+  }
+
+  .privateArchiveCover::after {
+    top: 26px;
+    right: 25px;
+  }
+
+  .privateArchiveBars {
+    width: 92%;
+    margin-block: 22px 25px;
+  }
+
+  .privateArchiveBars i {
+    height: 11px;
+  }
+
+  .privateArchive[open] > .privateArchiveCover {
+    margin-top: 16px;
   }
 
   .nightBody {

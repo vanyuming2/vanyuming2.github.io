@@ -34,6 +34,7 @@ import {
   SHAMBHALA_TALENT_ID,
   SPECIAL_PROLOGUE_EVENT_IDS,
   SPECIAL_RUMOR_EVENT_IDS,
+  UNLOADED_HOMETOWN_EVENT_ID,
 } from "./site-event-overrides";
 
 export type SpecialEndingPage = {
@@ -336,10 +337,12 @@ export const SPECIAL_ENDINGS: readonly SpecialEnding[] = [
     entryMode: "forced",
     outcome: "end-life",
     triggerTitle: "帷幕后有什么",
-    triggerPremise: "第二次人生里，你仍旧像普通人一样长大。大学毕业前，一段感情结束了。你在宿舍躺了几天，最后拖着行李回了老家。",
-    triggerLead: "你终于下定决心，颤抖着掀开了隐藏帷幕的一角。刹那间，周围的世界如雪花般无声消融。",
+    triggerPremise: "这一世，你忘记了此前的一切。仙界、异闻和那些无法解释的旧事，都已经离你很远。你只是一个二十多岁、刚刚失恋的大学生，在宿舍躺了几天后，拖着行李回到老家，想安静地住上一阵。",
+    triggerLead: "你伸手掀开帷幕的一角。下一秒，周围的一切开始无声褪去。",
     entryLabel: "揭开帷幕",
-    sourceEventIds: ["21305", "21306", "21307", "21308"],
+    sourceEventIds: [UNLOADED_HOMETOWN_EVENT_ID],
+    requiredTalentId: "site-red-pill",
+    triggerAgeRange: [20, 32],
     rumorEventId: SPECIAL_RUMOR_EVENT_IDS.unloadedHometown,
     pages: [
       ...UNLOADED_HOMETOWN_PREQUEL_PAGES,

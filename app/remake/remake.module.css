@@ -205,6 +205,20 @@
   line-height: 1.85;
 }
 
+.reincarnationHint {
+  max-width: 500px;
+  margin: 14px 0 0;
+  color: rgba(239, 203, 114, 0.68);
+  font-size: 0.72rem;
+  line-height: 1.75;
+}
+
+.reincarnationHint span {
+  display: block;
+  margin-top: 5px;
+  color: rgba(220, 213, 197, 0.5);
+}
+
 .primaryActions {
   display: flex;
   flex-wrap: wrap;
@@ -661,16 +675,27 @@
 
 .summaryCard { display: grid; justify-items: center; padding: 58px clamp(24px, 6vw, 64px); text-align: center; }
 .summaryCard[data-ending="perfect"] {
-  border-color: rgba(157, 233, 201, 0.28);
+  border-color: rgba(210, 218, 244, 0.28);
   background:
-    radial-gradient(circle at 50% 0%, rgba(154, 235, 199, 0.11), transparent 38%),
-    linear-gradient(135deg, rgba(216, 255, 238, 0.025), transparent 50%),
+    radial-gradient(circle at 50% 0%, rgba(210, 220, 255, 0.12), transparent 40%),
+    linear-gradient(135deg, rgba(229, 233, 255, 0.028), transparent 52%),
     var(--paper);
-  box-shadow: 0 24px 90px rgba(21, 91, 66, 0.18), inset 0 0 54px rgba(116, 217, 173, 0.025);
+  box-shadow: 0 24px 90px rgba(59, 67, 112, 0.18), inset 0 0 54px rgba(203, 212, 255, 0.025);
 }
 .summaryCard[data-ending="perfect"] > p:first-child,
-.summaryCard[data-ending="perfect"] .summaryScore strong { color: #c9f6df; }
+.summaryCard[data-ending="perfect"] .summaryScore strong { color: #dfe5ff; }
 .summaryCard > span { max-width: 580px; margin-top: 14px; color: var(--muted); font-size: 0.75rem; line-height: 1.8; }
+.perfectCelebration { display: grid; justify-items: center; max-width: 650px; margin-top: 23px; }
+.perfectCelebration > strong { margin-top: 17px; color: #e8ebff; font-size: 0.74rem; font-weight: 500; letter-spacing: 0.14em; }
+.perfectCelebration > p { margin: 15px 0 0; color: rgba(239, 239, 249, 0.72); font-size: clamp(0.86rem, 2vw, 1.02rem); line-height: 1.9; }
+.perfectCelebration > p b { color: #f4f5ff; font-size: 1.18em; font-weight: 500; }
+.perfectCelebration > small { max-width: 550px; margin-top: 12px; color: rgba(215, 214, 228, 0.44); font-size: 0.67rem; line-height: 1.75; }
+.perfectMoon { position: relative; display: grid; width: 82px; height: 82px; place-items: center; border: 1px solid rgba(224, 229, 255, 0.2); border-radius: 50%; background: radial-gradient(circle at 38% 34%, #f6f6ff 0 16%, #dfe5fb 40%, #aeb7d5 72%, #747e9e 100%); box-shadow: 0 0 34px rgba(196, 207, 251, 0.21), 0 0 90px rgba(151, 162, 216, 0.08); }
+.perfectMoon::before,
+.perfectMoon::after { position: absolute; content: ""; border-radius: 50%; background: rgba(112, 123, 160, 0.16); }
+.perfectMoon::before { width: 14px; height: 14px; top: 17px; right: 19px; }
+.perfectMoon::after { width: 9px; height: 9px; bottom: 20px; left: 17px; }
+.perfectMoon i { width: 3px; height: 3px; border-radius: 50%; background: #fff; box-shadow: -54px -12px 0 rgba(229, 233, 255, 0.72), 55px -20px 0 rgba(229, 233, 255, 0.5), -43px 47px 0 rgba(229, 233, 255, 0.4), 48px 42px 0 rgba(229, 233, 255, 0.58); }
 .summaryScore { display: grid; justify-items: center; margin: 38px 0 30px; }
 .summaryScore strong { color: var(--warm); font-size: clamp(2.4rem, 7vw, 4rem); font-weight: 400; line-height: 1; }
 .summaryScore small { margin-top: 8px; color: rgba(224, 215, 196, 0.4); font-size: 0.58rem; letter-spacing: 0.12em; }

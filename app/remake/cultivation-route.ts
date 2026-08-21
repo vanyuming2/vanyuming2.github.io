@@ -8,6 +8,10 @@ import type {
 export const SMALL_BOX_TALENT_ID = "1048";
 export const IMMORTAL_BOOK_EVENT_ID = "20461";
 export const IMMORTAL_BOOK_OPPORTUNITY_EVENT_ID = "site-small-box-immortal-book";
+export const FIRST_CULTIVATION_OPPORTUNITY_EVENT_ID = "site-first-cultivation-opportunity";
+export const FIRST_CULTIVATION_EVENT_ID = "site-first-cultivation-practice";
+export const FIRST_CULTIVATION_END_EVENT_ID = "site-first-cultivation-ending";
+export const FIRST_CULTIVATION_END_AGE = 99;
 export const IMMORTAL_BOOK_MIN_AGE = 26;
 export const IMMORTAL_BOOK_MAX_AGE = 59;
 // The upstream age pools contain sentinel weights far above ordinary events.
@@ -15,6 +19,7 @@ export const IMMORTAL_BOOK_MAX_AGE = 59;
 // effectively certain whenever the small-box condition is satisfied.
 export const IMMORTAL_BOOK_EVENT_WEIGHT = 1e100;
 export const CULTIVATION_CHAPTER_WEIGHT = 1e90;
+export const CULTIVATION_SIDE_EVENT_WEIGHT = 1e70;
 export const PERFECT_CULTIVATION_EVENT_ID = "40050";
 export const FIRST_SPECIAL_ACHIEVEMENT_ID = "site-achievement-first-special";
 export const PERFECT_CULTIVATION_ACHIEVEMENT_ID = "site-achievement-perfect-cultivation";
@@ -53,9 +58,37 @@ export const IMMORTAL_BOOK_OPPORTUNITY_EVENT: RemakeEventRecord = {
   id: IMMORTAL_BOOK_OPPORTUNITY_EVENT_ID,
   event: "一个乞丐拦住你，低声问：盒子还没有打开，对吗？随后，他从怀里取出一本《仙脉图录》。",
   grade: 3,
-  include: `TLT?[${SMALL_BOX_TALENT_ID}]`,
+  include: `TLT?[${SMALL_BOX_TALENT_ID}]&PEVT?["${FIRST_CULTIVATION_EVENT_ID}"]`,
   exclude: `EVT?[${IMMORTAL_BOOK_EVENT_ID},"${IMMORTAL_BOOK_OPPORTUNITY_EVENT_ID}"]`,
   branch: [`TLT?[${SMALL_BOX_TALENT_ID}]:${IMMORTAL_BOOK_EVENT_ID}`],
+};
+
+export const FIRST_CULTIVATION_OPPORTUNITY_EVENT: RemakeEventRecord = {
+  id: FIRST_CULTIVATION_OPPORTUNITY_EVENT_ID,
+  event: "你终于打开小盒子。盒中确有一卷仙法，但字句深奥，你照着行功数次，险些岔气。",
+  grade: 3,
+  include: `TLT?[${SMALL_BOX_TALENT_ID}]&PEVT!["${FIRST_CULTIVATION_EVENT_ID}"]`,
+  exclude: `EVT?["${FIRST_CULTIVATION_OPPORTUNITY_EVENT_ID}","${FIRST_CULTIVATION_EVENT_ID}"]`,
+  branch: [`TLT?[${SMALL_BOX_TALENT_ID}]:${FIRST_CULTIVATION_EVENT_ID}`],
+};
+
+export const FIRST_CULTIVATION_EVENT: RemakeEventRecord = {
+  id: FIRST_CULTIVATION_EVENT_ID,
+  event: "经验不足，你没有继续照搬盒中的仙法，只按自己摸索出的吐纳次序练气。气息渐稳，却仍未越过凡人的寿数。",
+  postEvent: "这一世，你只走到练气。那卷仙法被重新收好，留待来世再读。",
+  grade: 3,
+  effect: { INT: 4, STR: 8, SPR: 2 },
+  NoRandom: 1,
+};
+
+export const FIRST_CULTIVATION_END_EVENT: RemakeEventRecord = {
+  id: FIRST_CULTIVATION_END_EVENT_ID,
+  event: "直到暮年，你仍只把自己摸索的练气功法练得更加纯熟，却始终没有越过凡人的边界。",
+  postEvent: "这一世止于练气。临终前，你把小盒子重新放回枕边。",
+  grade: 2,
+  include: `TLT?[${SMALL_BOX_TALENT_ID}]&PEVT!["${FIRST_CULTIVATION_EVENT_ID}"]&EVT?["${FIRST_CULTIVATION_EVENT_ID}"]`,
+  exclude: `EVT?["${FIRST_CULTIVATION_END_EVENT_ID}"]`,
+  effect: { LIF: -1 },
 };
 
 export interface CultivationChapter {
@@ -64,6 +97,94 @@ export interface CultivationChapter {
   maxAge: number;
   event: RemakeEventRecord;
 }
+
+export interface CultivationSideEvent {
+  id: string;
+  minAge: number;
+  maxAge: number;
+  event: RemakeEventRecord;
+}
+
+const sideEvent = (
+  id: string,
+  minAge: number,
+  maxAge: number,
+  text: string,
+  include: string,
+  effect: RemakeEventRecord["effect"],
+): CultivationSideEvent => ({
+  id,
+  minAge,
+  maxAge,
+  event: {
+    id,
+    event: text,
+    grade: 1,
+    include,
+    exclude: `EVT?["${id}"]`,
+    effect,
+  },
+});
+
+/** Small human moments between the major chapters. They never branch or end a life. */
+export const CULTIVATION_SIDE_EVENTS: readonly CultivationSideEvent[] = [
+  sideEvent(
+    "site-cultivation-side-breath",
+    30,
+    55,
+    "你把自己摸索的吐纳法教给久病的邻人。它不能治病，却让他今晚睡得安稳了些。你心情很好。",
+    `TLT?[${SMALL_BOX_TALENT_ID}]&EVT?["${FIRST_CULTIVATION_EVENT_ID}"]&EVT![${IMMORTAL_BOOK_EVENT_ID}]`,
+    { SPR: 2 },
+  ),
+  sideEvent(
+    "site-cultivation-side-river",
+    56,
+    90,
+    "河堤夜里有人仗势拦路。你只用了半式练气功夫，便让他们知难而退。无人受伤，你心情大好。",
+    `TLT?[${SMALL_BOX_TALENT_ID}]&EVT?["${FIRST_CULTIVATION_EVENT_ID}"]&EVT![${IMMORTAL_BOOK_EVENT_ID}]`,
+    { STR: 1, SPR: 2 },
+  ),
+  sideEvent(
+    "site-cultivation-side-medicine",
+    112,
+    155,
+    "山路旁有人高烧不退。你留下几味寻常草药，又以灵息护住他的心脉。数日后收到平安口信，你很高兴。",
+    `TLT?[${SMALL_BOX_TALENT_ID}]&EVT?["site-cultivation-01"]`,
+    { SPR: 2 },
+  ),
+  sideEvent(
+    "site-cultivation-side-bandits",
+    170,
+    215,
+    "一伙山匪劫了过路商队。你折断他们的兵刃，却没有取人性命。失物尽数归还，众人只当遇见了侠客。",
+    `TLT?[${SMALL_BOX_TALENT_ID}]&EVT?["site-cultivation-03"]`,
+    { STR: 2, SPR: 3 },
+  ),
+  sideEvent(
+    "site-cultivation-side-rain",
+    250,
+    305,
+    "村中久旱。你没有显露神通，只在夜里替他们疏通了地下暗河。三日后井水回升，村民以为是时来运转。",
+    `TLT?[${SMALL_BOX_TALENT_ID}]&EVT?["site-cultivation-05"]`,
+    { SPR: 2 },
+  ),
+  sideEvent(
+    "site-cultivation-side-traveler",
+    330,
+    385,
+    "大雪封山，你为迷路的旅人点亮一盏不会熄灭的灯。翌日灯火自行散去，他们始终不知道是谁救了自己。",
+    `TLT?[${SMALL_BOX_TALENT_ID}]&EVT?["site-cultivation-07"]`,
+    { SPR: 2 },
+  ),
+  sideEvent(
+    "site-cultivation-side-letter",
+    410,
+    465,
+    "你替一封在战乱中遗失多年的家书找到了归处。收信人早已不在，后人仍将它认真读完。",
+    `TLT?[${SMALL_BOX_TALENT_ID}]&EVT?["site-cultivation-10"]`,
+    { SPR: 2 },
+  ),
+];
 
 const chapter = (
   index: number,
@@ -177,6 +298,9 @@ export function isCultivationEventId(id: RemakeId) {
   const numeric = Number(value);
   return value === IMMORTAL_BOOK_EVENT_ID
     || value === IMMORTAL_BOOK_OPPORTUNITY_EVENT_ID
+    || value === FIRST_CULTIVATION_OPPORTUNITY_EVENT_ID
+    || value === FIRST_CULTIVATION_EVENT_ID
+    || value === FIRST_CULTIVATION_END_EVENT_ID
     || value.startsWith("site-cultivation-")
     || (Number.isInteger(numeric) && numeric >= 40001 && numeric <= 40050);
 }

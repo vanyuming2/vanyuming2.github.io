@@ -200,7 +200,15 @@ export type RemakeEngineOptions = {
   allocationRange?: readonly [number, number];
   talentRates?: Partial<Record<RemakeGrade, number>> & { total?: number };
   talentWeights?: Partial<Record<RemakeId, number>>;
+  exclusiveTalentGroups?: readonly (readonly RemakeId[])[];
   persistent?: RemakePersistentProperties;
+};
+
+export type TalentDrawOptions = {
+  count?: number;
+  includeTalentId?: RemakeId | null;
+  includeTalentIds?: readonly RemakeId[];
+  excludeTalentIds?: readonly RemakeId[];
 };
 
 export type ConditionValue = number | string | readonly (number | string)[];
@@ -593,6 +601,9 @@ export class RemakeSession {
     if (property === "TLT") return state.talentIds.map(comparable);
     if (property === "EVT") return state.eventIds.map(comparable);
     if (property === "ATLT") return [...new Set([...this.persistent.achievedTalents, ...state.talentIds])].map(comparable);
+    // Previous-life memory for site routes. AEVT also includes this run, while
+    // PEVT intentionally does not, so a two-life route cannot unlock at once.
+    if (property === "PEVT") return this.persistent.achievedEvents.map(comparable);
     if (property === "AEVT") return [...new Set([...this.persistent.achievedEvents, ...state.eventIds])].map(comparable);
     if (property === "TMS") return this.persistent.times;
     if (property === "SUM") return calculateScore(state.highest);
@@ -853,6 +864,9 @@ export function createRemakeEngine(data: RemakeData, options: RemakeEngineOption
     0.0001,
     numberOf(options.talentWeights?.[talent.id], 1),
   );
+  const exclusiveTalentGroups = (options.exclusiveTalentGroups ?? [])
+    .map((group) => new Set(group.map(idOf)))
+    .filter((group) => group.size > 1);
 
   const conflict = (selectedIds: readonly RemakeId[], candidateId: RemakeId): RemakeId | null => {
     const candidate = normalized.talents[idOf(candidateId)];
@@ -862,6 +876,7 @@ export function createRemakeEngine(data: RemakeData, options: RemakeEngineOption
       const selected = normalized.talents[selectedId];
       if (!selected) continue;
       if (candidate.exclude.includes(selectedId) || selected.exclude.includes(candidate.id)) return selectedId;
+      if (exclusiveTalentGroups.some((group) => group.has(candidate.id) && group.has(selectedId))) return selectedId;
     }
     return null;
   };
@@ -869,11 +884,21 @@ export function createRemakeEngine(data: RemakeData, options: RemakeEngineOption
   const allocationPoints = (talentIds: readonly RemakeId[]) =>
     defaultPropertyPoints + talentIds.reduce((sum, id) => sum + numberOf(normalized.talents[idOf(id)]?.status), 0);
 
-  const drawTalents = ({ count = 10, includeTalentId }: { count?: number; includeTalentId?: RemakeId | null } = {}): TalentDrawResult => {
+  const drawTalents = ({
+    count = 10,
+    includeTalentId,
+    includeTalentIds = [],
+    excludeTalentIds = [],
+  }: TalentDrawOptions = {}): TalentDrawResult => {
     const pools: Record<RemakeGrade, NormalizedTalent[]> = { 0: [], 1: [], 2: [], 3: [] };
-    const includeId = includeTalentId == null ? null : idOf(includeTalentId);
+    const includedIds = [...new Set([
+      ...(includeTalentId == null ? [] : [idOf(includeTalentId)]),
+      ...includeTalentIds.map(idOf),
+    ])];
+    const includedIdSet = new Set(includedIds);
+    const excludedIdSet = new Set(excludeTalentIds.map(idOf));
     for (const talent of Object.values(normalized.talents)) {
-      if (numberOf(talent.exclusive) !== 0 || talent.id === includeId) continue;
+      if (numberOf(talent.exclusive) !== 0 || includedIdSet.has(talent.id) || excludedIdSet.has(talent.id)) continue;
       pools[talent.grade].push(talent);
     }
 
@@ -895,8 +920,10 @@ export function createRemakeEngine(data: RemakeData, options: RemakeEngineOption
       if (pools[target].length) initialEffective[target] += rawMass[source] / massTotal;
     }
 
-    const cards: RemakeTalentCard[] = [];
-    if (includeId && normalized.talents[includeId] && count > 0) cards.push(cardOf(normalized.talents[includeId], 1));
+    const cards: RemakeTalentCard[] = includedIds
+      .filter((id) => Boolean(normalized.talents[id]))
+      .slice(0, Math.max(0, Math.trunc(count)))
+      .map((id) => cardOf(normalized.talents[id], 1));
     while (cards.length < Math.max(0, Math.trunc(count))) {
       if (!Object.values(pools).some((pool) => pool.length)) break;
       const source = weightedPick<RemakeGrade>([0, 1, 2, 3], (grade) => rawMass[grade], random);

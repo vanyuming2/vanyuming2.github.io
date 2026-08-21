@@ -55,8 +55,13 @@ if (process.platform === "win32") {
       remakeOutputStat.mtimeMs >= startedAt - 2_000 &&
       remakeDataStats.every(({ size }) => size > 1_000);
     const isComplete =
-      html.includes("万雨铭") &&
-      html.includes("张锦") &&
+      html.includes("写给张老师") &&
+      html.includes("随便看看") &&
+      html.includes("见面再说。") &&
+      html.includes('class="privateArchive"') &&
+      html.includes("这里留了一些东西 · 点击查看") &&
+      html.includes("这部分显示有点问题，暂时隐藏内容。") &&
+      html.includes('class="privateArchiveStored" hidden') &&
       html.includes('href="/garden/"') &&
       gardenHtml.includes("第一块小花园") &&
       gardenHtml.includes('data-memory-garden="first-garden"') &&

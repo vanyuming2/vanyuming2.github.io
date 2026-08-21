@@ -13,7 +13,7 @@ export type MemoryMoment = {
 export const memoryMoments = [
   {
     id: "white-goose",
-    imagePath: "/memory-moments/white-goose.png?v=20260807",
+    imagePath: "/keepsakes/white-goose.webp",
     fallbackGlyph: "鹅",
     label: "大白鹅",
     hint: "那只大白鹅一出现，我就想起我们玩过的那局游戏。",
@@ -22,7 +22,7 @@ export const memoryMoments = [
   },
   {
     id: "starfish",
-    imagePath: "/memory-moments/starfish.png?v=20260807",
+    imagePath: "/keepsakes/starfish.webp",
     fallbackGlyph: "★",
     label: "海星",
     hint: "这颗海星，替我们记着那次海岛旅行。",
@@ -31,7 +31,7 @@ export const memoryMoments = [
   },
   {
     id: "textbook",
-    imagePath: "/memory-moments/textbook.png?v=20260807",
+    imagePath: "/keepsakes/textbook.webp",
     fallbackGlyph: "书",
     label: "课本",
     hint: "故事最早的一页，还夹在课本里。",
@@ -40,7 +40,7 @@ export const memoryMoments = [
   },
   {
     id: "chat-bubble",
-    imagePath: "/memory-moments/chat-bubble.png?v=20260807",
+    imagePath: "/keepsakes/chat-bubble.webp",
     fallbackGlyph: "…",
     label: "聊天气泡",
     hint: "后来，我们从一句近况又聊了起来。",
@@ -49,7 +49,7 @@ export const memoryMoments = [
   },
   {
     id: "moonlit-night",
-    imagePath: "/memory-moments/moonlit-night.png?v=20260807",
+    imagePath: "/keepsakes/moonlit-night.webp",
     fallbackGlyph: "月",
     label: "月夜",
     hint: "凌晨 00:17，月亮替我记着。",

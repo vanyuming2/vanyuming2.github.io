@@ -120,9 +120,10 @@ UI 不应重新实现一套不一致的事件规则。
 
 ## 素材目录
 
-- `public/remake-tales/`：网页实际加载的 367 张 WebP。
+- `public/remake-tales/`：367 张桌面故事原图，以及逐页同名的 `*.mobile.webp` 手机轻量图；阅读器用 `<picture>` 按视口选择并预加载后两页。
 - `素材库/抖音图文/`：原始抓取、manifest 和核查资料，不由网页直接引用。
-- `public/memory-moments/`：五张透明记忆图标。
+- `public/memory-moments/`：五张透明记忆图标原始 PNG。
+- `public/keepsakes/`：主页实际加载的五张 128px 轻量 WebP，避免手机端下载 1254px 原图。
 - `花园参考图片/`：花园美术参考，不直接在页面加载。
 
 映射与数量见 `ASSET_MANIFEST.md`。

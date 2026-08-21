@@ -648,8 +648,10 @@ export default function MemoryQuest() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   alt=""
+                  decoding="async"
                   draggable={false}
                   height="64"
+                  loading="eager"
                   onError={(event) => {
                     event.currentTarget.hidden = true;
                   }}

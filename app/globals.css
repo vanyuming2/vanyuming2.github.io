@@ -1793,19 +1793,7 @@ blockquote {
   }
 
   .memoryMomentEdges {
-    position: fixed;
-    bottom: 11px;
-    left: 50%;
-    z-index: 48;
-    display: flex;
-    gap: 2px;
-    padding: 5px 7px;
-    border: 1px solid rgba(244, 222, 177, 0.09);
-    border-radius: 18px;
-    background: rgba(22, 21, 18, 0.76);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
-    backdrop-filter: blur(12px);
-    transform: translateX(-50%);
+    position: static;
   }
 
   .memoryMomentEdges:empty {
@@ -1817,16 +1805,30 @@ blockquote {
   .memoryMomentButton--right,
   .memoryMomentButton--bottom,
   .memoryMomentButton--left {
-    position: relative;
-    inset: auto;
-    width: 49px;
-    height: 49px;
-    transform: none;
+    position: fixed;
+    width: 58px;
+    height: 58px;
+  }
+
+  .memoryMomentButton--left {
+    transform: translate(-28%, -50%);
+  }
+
+  .memoryMomentButton--right {
+    transform: translate(28%, -50%);
+  }
+
+  .memoryMomentButton--top {
+    transform: translate(-50%, -24%);
+  }
+
+  .memoryMomentButton--bottom {
+    transform: translate(-50%, 18%);
   }
 
   .memoryMomentImage {
-    width: 47px;
-    height: 47px;
+    width: 54px;
+    height: 54px;
   }
 
   .memoryMomentFallback {
@@ -1835,12 +1837,12 @@ blockquote {
   }
 
   .memoryQuestProgress {
-    bottom: 78px;
+    bottom: 16px;
     left: 14px;
   }
 
   .memoryMomentToast {
-    bottom: 78px;
+    bottom: 76px;
   }
 
   .memoryQuestInvitation {

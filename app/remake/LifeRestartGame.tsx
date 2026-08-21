@@ -129,6 +129,11 @@ const TALENT_DRAW_COUNT = 30;
 const MAX_TALENT_REFRESHES = 3;
 const RED_TALENT_DRAW_CHANCE = 0.75;
 const REMAKE_DEVTOOLS_ENABLED = process.env.NODE_ENV !== "production";
+
+function mobileStoryImagePath(path: string) {
+  return path.replace(/\.webp$/, ".mobile.webp");
+}
+
 const BOOSTED_TALENT_RATES = {
   0: 45,
   1: 30,
@@ -714,6 +719,7 @@ export default function LifeRestartGame() {
   const [clearArmed, setClearArmed] = useState(false);
   const [storyEndingId, setStoryEndingId] = useState<string | null>(null);
   const [storyPage, setStoryPage] = useState(0);
+  const [loadedStoryImagePath, setLoadedStoryImagePath] = useState<string | null>(null);
   const [storyFromEncounter, setStoryFromEncounter] = useState(false);
   const [encounterWasCollected, setEncounterWasCollected] = useState(false);
   const [pendingSpecialEndingId, setPendingSpecialEndingId] = useState<string | null>(null);
@@ -759,6 +765,8 @@ export default function LifeRestartGame() {
     [storyEndingId],
   );
   const activeStory = activeStoryRecord?.story ?? null;
+  const activeStoryPage = activeStory?.pages[storyPage] ?? null;
+  const storyImageLoaded = Boolean(activeStoryPage && loadedStoryImagePath === activeStoryPage.image);
   const activeStoryIsTruthEnding = Boolean(
     activeStory?.id === UNLOADED_HOMETOWN_ID && truthRunActive && storyFromEncounter,
   );
@@ -950,6 +958,16 @@ export default function LifeRestartGame() {
       document.removeEventListener("keydown", handleStoryKeyboard);
     };
   }, [activeStory, storyFromEncounter]);
+
+  useEffect(() => {
+    if (!activeStory) return;
+    const useMobileImages = window.matchMedia("(max-width: 720px)").matches;
+    activeStory.pages.slice(storyPage + 1, storyPage + 3).forEach((page) => {
+      const image = new Image();
+      image.decoding = "async";
+      image.src = useMobileImages ? mobileStoryImagePath(page.image) : page.image;
+    });
+  }, [activeStory, storyPage]);
 
   useEffect(() => {
     if (!hydrated || !data) return;
@@ -1579,7 +1597,7 @@ export default function LifeRestartGame() {
         <span className={styles.homeStar} aria-hidden="true">✦</span>
         <p>原版中文事件库</p>
         <h1 id="life-loading-title">要不要，再写一次人生？</h1>
-        <span>{loadError ? "事件库没有打开，请再试一次。" : "正在翻开 1719 条原版经历……"}</span>
+        <span>{loadError ? "事件库没有打开，请再试一次。" : "正在翻开 1719 条人生经历……"}</span>
         {loadError && (
           <button className={styles.primaryButton} type="button" onClick={() => {
             setLoadError(false);
@@ -1621,7 +1639,7 @@ export default function LifeRestartGame() {
       {stage === "home" && (
         <section className={styles.homeCard} aria-labelledby="life-home-title">
           <span className={styles.homeStar} aria-hidden="true">✦</span>
-          <p>1719 条原版中文经历</p>
+          <p>1719 条人生经历</p>
           <h1 id="life-home-title">要不要，再写一次人生？</h1>
           <span>从三十张增强天赋池里选三张，分配最初的二十点，然后看看这一页会走到哪里。</span>
           <p className={styles.reincarnationHint}>
@@ -2039,7 +2057,10 @@ export default function LifeRestartGame() {
           aria-labelledby="special-ending-title"
         >
           <div className={styles.specialEndingCover} aria-hidden="true">
-            <img src={encounterEnding.pages[0].image} alt="" />
+            <picture>
+              <source media="(max-width: 720px)" srcSet={mobileStoryImagePath(encounterEnding.pages[0].image)} />
+              <img src={encounterEnding.pages[0].image} alt="" decoding="async" fetchPriority="high" />
+            </picture>
           </div>
           <div className={styles.specialEndingCopy}>
             <p>
@@ -2174,7 +2195,10 @@ export default function LifeRestartGame() {
                       {unlocked ? (
                         <>
                           <div className={styles.specialEndingArchiveCover}>
-                            <img src={ending.pages[0].image} alt="" />
+                            <picture>
+                              <source media="(max-width: 720px)" srcSet={mobileStoryImagePath(ending.pages[0].image)} />
+                              <img src={ending.pages[0].image} alt="" decoding="async" loading="lazy" />
+                            </picture>
                           </div>
                           <div>
                             <p>{ending.kicker}</p>
@@ -2290,15 +2314,24 @@ export default function LifeRestartGame() {
               <button type="button" aria-label="关闭图文" onClick={() => setStoryEndingId(null)}>×</button>
             )}
           </header>
-          <figure>
-            <img
-              src={activeStory.pages[storyPage].image}
-              alt={activeStory.pages[storyPage].text
-                ? `第${storyPage + 1}页：${activeStory.pages[storyPage].text}`
-                : `${activeStory.title}第${storyPage + 1}页`}
-            />
-            {activeStory.pages[storyPage].text && (
-              <figcaption>{activeStory.pages[storyPage].text}</figcaption>
+          <figure aria-busy={!storyImageLoaded}>
+            <div className={styles.storyImageFrame} data-loaded={storyImageLoaded}>
+              <picture key={activeStoryPage?.image}>
+                <source media="(max-width: 720px)" srcSet={mobileStoryImagePath(activeStoryPage!.image)} />
+                <img
+                  src={activeStoryPage!.image}
+                  alt={activeStoryPage!.text
+                    ? `第${storyPage + 1}页：${activeStoryPage!.text}`
+                    : `${activeStory.title}第${storyPage + 1}页`}
+                  decoding="async"
+                  fetchPriority="high"
+                  onLoad={() => setLoadedStoryImagePath(activeStoryPage!.image)}
+                />
+              </picture>
+              {!storyImageLoaded && <span role="status">正在翻到这一页……</span>}
+            </div>
+            {activeStoryPage?.text && (
+              <figcaption>{activeStoryPage.text}</figcaption>
             )}
           </figure>
           <footer>

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { access, readFile } from "node:fs/promises";
+import { access, readFile, stat } from "node:fs/promises";
 import test from "node:test";
 import ts from "typescript";
 
@@ -66,6 +66,21 @@ const overridesJavaScript = ts.transpileModule(overridesSource, {
 const overrides = await import(`data:text/javascript;base64,${Buffer.from(overridesJavaScript).toString("base64")}`);
 const ages = JSON.parse(await readFile(new URL("public/remake-data/age.json", root), "utf8"));
 const events = JSON.parse(await readFile(new URL("public/remake-data/events.json", root), "utf8"));
+
+test("ships a lightweight mobile image for every special-event page", async () => {
+  const pages = endings.SPECIAL_ENDINGS.flatMap((ending) => [
+    ...ending.pages,
+    ...(ending.mirrorChapter?.pages ?? []),
+  ]);
+
+  assert.equal(pages.length, 367);
+  await Promise.all(pages.map(async ({ image }) => {
+    const original = new URL(image.replace(/^\//, "public/"), root);
+    const mobile = new URL(image.replace(/^\//, "public/").replace(/\.webp$/, ".mobile.webp"), root);
+    await access(mobile);
+    assert.ok((await stat(mobile)).size < (await stat(original)).size, `${mobile.pathname} should be smaller`);
+  }));
+});
 
 test("ships the complete fifty-page virtual-world ending with its prequel", async () => {
   assert.equal(endings.SPECIAL_ENDINGS.length, 10);

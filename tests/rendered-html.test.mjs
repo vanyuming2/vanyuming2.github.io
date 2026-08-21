@@ -69,10 +69,11 @@ test("includes the GitHub Pages assets", async () => {
 });
 
 test("keeps the memory icons replaceable and ships the mini game", async () => {
-  const [html, moments, quest] = await Promise.all([
+  const [html, moments, quest, css] = await Promise.all([
     readFile(new URL("dist/client/index.html", root), "utf8"),
     readFile(new URL("app/memory-moments.ts", root), "utf8"),
     readFile(new URL("app/MemoryQuest.tsx", root), "utf8"),
+    readFile(new URL("app/globals.css", root), "utf8"),
   ]);
 
   assert.match(html, /大白鹅/);
@@ -81,8 +82,9 @@ test("keeps the memory icons replaceable and ships the mini game", async () => {
     html,
     /class="memoryQuestProgress">找到 <strong>0<\/strong> \/ <!-- -->5/,
   );
-  assert.match(moments, /imagePath:\s*"\/memory-moments\/white-goose\.png\?v=20260807"/);
-  assert.match(moments, /imagePath:\s*"\/memory-moments\/starfish\.png\?v=20260807"/);
+  assert.match(moments, /imagePath:\s*"\/keepsakes\/white-goose\.webp"/);
+  assert.match(moments, /imagePath:\s*"\/keepsakes\/starfish\.webp"/);
+  assert.match(css, /@media \(max-width: 720px\)[\s\S]*?\.memoryMomentButton[\s\S]*?position: fixed/);
   assert.match(quest, /const MEMORY_GOAL = memoryMoments\.length/);
   assert.match(quest, /const GAME_TICK_MS = 270/);
   assert.match(quest, /const SNAKE_MOTION_MS = 230/);
@@ -95,18 +97,18 @@ test("keeps the memory icons replaceable and ships the mini game", async () => {
   assert.match(quest, /最后一件事，留到我们见面以后再写。/);
 
   const iconFiles = [
-    "white-goose.png",
-    "starfish.png",
-    "textbook.png",
-    "chat-bubble.png",
-    "moonlit-night.png",
+    "white-goose.webp",
+    "starfish.webp",
+    "textbook.webp",
+    "chat-bubble.webp",
+    "moonlit-night.webp",
   ];
 
-  await Promise.all(
-    iconFiles.map((name) =>
-      access(new URL(`dist/client/memory-moments/${name}`, root)),
-    ),
-  );
+  await Promise.all(iconFiles.map(async (name) => {
+    const icon = new URL(`dist/client/keepsakes/${name}`, root);
+    await access(icon);
+    assert.ok((await stat(icon)).size < 15_000, `${name} should stay lightweight`);
+  }));
 });
 
 test("exports the first low-poly memory garden", async () => {
@@ -156,7 +158,11 @@ test("exports the complete original-data life-remake loop", async () => {
   assert.match(game, /下一次轮回里，藏着的东西也许比你想象得更多。等零散的痕迹彼此对上，你看到的，或许会是这个世界原本的样子。/);
   assert.doesNotMatch(remakeHtml, /中文内容与规则改编自|卡片按原版等级着色/);
   assert.match(game, /loadOriginalData/);
-  assert.match(game, /1719 条原版中文经历/);
+  assert.match(game, /1719 条人生经历/);
+  assert.doesNotMatch(game, /1719 条原版中文经历/);
+  assert.match(game, /mobileStoryImagePath/);
+  assert.match(game, /new Image\(\)/);
+  assert.match(game, /data-loaded=\{storyImageLoaded\}/);
   assert.match(game, /selectedTalentIds\.length !== 3/);
   assert.match(game, /const TALENT_DRAW_COUNT = 30/);
   assert.match(game, /const MAX_TALENT_REFRESHES = 3/);

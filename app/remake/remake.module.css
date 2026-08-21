@@ -831,7 +831,9 @@
   background: linear-gradient(90deg, transparent 55%, #171614 100%), linear-gradient(0deg, rgba(9, 8, 7, 0.44), transparent 46%);
   content: "";
 }
-.specialEndingCover img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 52%; filter: saturate(0.72) brightness(0.72); }
+.specialEndingCover picture,
+.specialEndingArchiveCover picture { display: block; width: 100%; height: 100%; }
+.specialEndingCover img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 52%; filter: saturate(0.72) brightness(0.72); }
 .specialEndingCard[data-entry-mode="forced"] .specialEndingCover img { filter: grayscale(0.85) blur(3px) brightness(0.4); transform: scale(1.035); }
 .specialEndingCopy { align-self: center; padding: 48px clamp(28px, 5vw, 58px) 48px 36px; }
 .specialEndingCopy > p { margin: 0 0 14px; color: rgba(229, 104, 91, 0.8); font-size: 0.67rem; letter-spacing: 0.12em; }
@@ -869,7 +871,11 @@
 .storyViewer > header > span { color: rgba(231, 222, 205, 0.46); font-size: 0.68rem; font-variant-numeric: tabular-nums; }
 .storyViewer > header > button { display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.04); color: rgba(238, 231, 216, 0.62); cursor: pointer; font-size: 1.2rem; }
 .storyViewer figure { display: grid; grid-template-rows: minmax(0, 1fr) auto; place-items: center; gap: 12px; min-height: 0; margin: 0; padding: 16px 0; overflow: hidden; }
-.storyViewer figure img { display: block; max-width: 100%; max-height: 100%; border-radius: 10px; object-fit: contain; box-shadow: 0 18px 64px rgba(0, 0, 0, 0.48); }
+.storyImageFrame { position: relative; display: grid; place-items: center; width: 100%; height: 100%; min-height: 0; }
+.storyImageFrame picture { display: grid; place-items: center; width: 100%; height: 100%; min-height: 0; }
+.storyImageFrame img { display: block; max-width: 100%; max-height: 100%; border-radius: 10px; object-fit: contain; box-shadow: 0 18px 64px rgba(0, 0, 0, 0.48); opacity: 1; transition: opacity 180ms ease; }
+.storyImageFrame[data-loaded="false"] img { opacity: 0; }
+.storyImageFrame > span { position: absolute; color: rgba(231, 222, 205, 0.52); font-size: 0.72rem; letter-spacing: 0.08em; }
 .storyViewer figure figcaption { width: min(720px, calc(100% - 24px)); color: rgba(238, 229, 216, 0.82); font-family: Georgia, "Noto Serif SC", serif; font-size: clamp(0.82rem, 1.8vw, 0.98rem); line-height: 1.75; letter-spacing: 0.02em; text-align: center; text-wrap: balance; }
 .storyViewer > footer { position: relative; z-index: 3; display: grid; grid-template-columns: minmax(104px, auto) minmax(0, 1fr) minmax(104px, auto); align-items: center; gap: 15px; width: min(980px, 100%); min-height: 68px; margin: 0 auto; border-top: 1px solid rgba(235, 218, 186, 0.11); pointer-events: auto; }
 .storyViewer > footer button { position: relative; z-index: 4; pointer-events: auto; touch-action: manipulation; }
@@ -930,7 +936,7 @@
 }
 .specialEndingArchive[data-unlocked="false"] { grid-template-columns: 1fr; padding: 20px; border-style: dashed; opacity: 0.56; }
 .specialEndingArchiveCover { min-height: 190px; background: #0c0b0a; }
-.specialEndingArchiveCover img { width: 100%; height: 100%; object-fit: cover; filter: saturate(0.7) brightness(0.67); }
+.specialEndingArchiveCover img { display: block; width: 100%; height: 100%; object-fit: cover; filter: saturate(0.7) brightness(0.67); }
 .specialEndingArchive > div:not(.specialEndingArchiveCover) { align-self: center; padding: 19px 19px 19px 0; }
 .specialEndingArchive[data-unlocked="false"] > div { padding: 0; }
 .specialEndingArchive p { margin: 0 0 7px; color: rgba(229, 104, 91, 0.72); font-size: 0.62rem; letter-spacing: 0.08em; }

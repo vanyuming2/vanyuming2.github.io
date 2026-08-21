@@ -1,13 +1,14 @@
 # 素材与发布资源清单
 
-> 基准日期：2026-08-14
+> 基准日期：2026-08-21
 > 用户已说明相关图文已取得作者同意，用于非商业私人项目。新增素材仍应逐项记录来源与处理方式。
 
 ## 目录职责
 
 - `素材库/抖音图文/`：原始下载、页面核查和 manifest。网页不直接加载。
-- `public/remake-tales/`：经过选择、排序、裁切后的发布 WebP，网页直接加载。
-- `public/memory-moments/`：主页五个透明图标。
+- `public/remake-tales/`：经过选择、排序、裁切后的发布 WebP；每张原图旁另有同名 `*.mobile.webp` 手机衍生图。
+- `public/memory-moments/`：主页五个透明图标原始 PNG。
+- `public/keepsakes/`：主页实际加载的 128px 轻量 WebP。
 - `花园参考图片/`：美术参考，不进入网页包。
 
 ## 发布故事资源
@@ -28,7 +29,7 @@
 | `sand-sea/episode-3` | 沙海之下第三集 | 35 | `7672391726467665192` | 同上 |
 | `eight-foot-woman` | 八尺之外 | 25 | `7664415128553687547` | 紫色恐怖事件 |
 
-发布目录合计 367 张 WebP，约 45.91 MB。
+发布目录合计 367 张桌面 WebP，约 45.91 MB；另有 367 张宽度不超过 720px、质量 72 的手机衍生 WebP，约 17.33 MB。衍生图保持原顺序与内容，不替代原图。
 
 ## 当前原始素材库
 
@@ -46,7 +47,8 @@
 
 ## 主页与花园素材
 
-- `public/memory-moments/`：5 张 PNG，约 2.28 MB。文件名为 `white-goose`、`starfish`、`textbook`、`chat-bubble`、`moonlit-night`。
+- `public/memory-moments/`：5 张 1254px PNG 原图，约 2.28 MB。文件名为 `white-goose`、`starfish`、`textbook`、`chat-bubble`、`moonlit-night`。
+- `public/keepsakes/`：上述 5 张图的 128px 无损 WebP，合计约 40 KB，供主页和小游戏直接加载。
 - `花园参考图片/`：2 张参考图，约 0.47 MB。仅用于审美对照，不作为页面纹理或成品素材发布。
 - `public/og.png`：社交分享图。修改主页视觉时需单独核对是否仍匹配当前版本。
 

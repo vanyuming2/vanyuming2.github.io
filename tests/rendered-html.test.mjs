@@ -49,7 +49,10 @@ test("keeps the timer exact and accessible", async () => {
     readFile(new URL("app/globals.css", root), "utf8"),
   ]);
 
-  assert.match(page, /2026-04-29T00:17:00\+08:00/);
+  assert.match(page, /2026-08-02T15:57:00\+08:00/);
+  assert.match(page, /timerLabel = time\.isCountdown \? "距离本站开始" : "本站"/);
+  assert.match(page, /本站已经运行 \$\{time\.days\} 天/);
+  assert.match(page, /从 2026 年 8 月 2 日 15:57 开始/);
   assert.match(page, /Date\.now\(\)/);
   assert.match(page, /visibilitychange/);
   assert.match(page, /aria-live="polite"/);

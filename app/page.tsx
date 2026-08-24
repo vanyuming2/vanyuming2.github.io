@@ -7,7 +7,7 @@ import LifeInvitation from "./LifeInvitation";
 import MemoryQuest from "./MemoryQuest";
 import PhotoCollections from "./PhotoCollections";
 
-const START_TIME = new Date("2026-04-29T00:17:00+08:00").getTime();
+const START_TIME = new Date("2026-08-02T15:57:00+08:00").getTime();
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
 type ElapsedTime = {
@@ -103,10 +103,10 @@ export default function Home() {
     };
   }, []);
 
-  const timerLabel = time.isCountdown ? "距离那天" : "从那天到现在";
+  const timerLabel = time.isCountdown ? "距离本站开始" : "本站";
   const accessibleSummary = time.isCountdown
-    ? `距离告白还有 ${time.days} 天`
-    : `从告白那天起已经过了 ${time.days} 天`;
+    ? `距离本站开始还有 ${time.days} 天`
+    : `本站已经运行 ${time.days} 天`;
 
   return (
     <main className="night">
@@ -141,8 +141,8 @@ export default function Home() {
             <strong>{hasStarted ? time.days : "—"}</strong>
             <span>天</span>
           </div>
-          <time dateTime="2026-04-29T00:17:00+08:00">
-            开始于 2026.04.29 · 00:17
+          <time dateTime="2026-08-02T15:57:00+08:00">
+            从 2026 年 8 月 2 日 15:57 开始
           </time>
           <p className="srOnly" aria-live="polite" aria-atomic="true">
             {hasStarted ? accessibleSummary : ""}

@@ -130,6 +130,17 @@ test("exports two photo collections as closed scrapbooks with responsive real im
   assert.doesNotMatch(html, /生活 01|风格 01|台词待写/);
   assert.match(collections, /lifeCount\s*=\s*83/);
   assert.match(collections, /styledCount\s*=\s*27/);
+  const lifeLinesBlock = collections.match(
+    /const lifeLines:[\s\S]*?=\s*\{([\s\S]*?)\};/,
+  )?.[1] ?? "";
+  assert.equal(
+    (lifeLinesBlock.match(/^\s*\d+:/gm) ?? []).length,
+    57,
+    "life scrapbook should have logs for pages 1 through 57",
+  );
+  assert.match(lifeLinesBlock, /^\s*1:\s*"很小的车，能放在手掌里那种。"/m);
+  assert.match(lifeLinesBlock, /^\s*57:\s*"路人鱼，我想复刻蟹堡王的 3D 模型"/m);
+  assert.doesNotMatch(lifeLinesBlock, /^\s*(?:5[8-9]|[6-7]\d|8[0-3]):/m);
   assert.match(gallery, /journalPhotoArea/);
   assert.match(gallery, /PhotoDoodle/);
   assert.match(gallery, /<picture/);
